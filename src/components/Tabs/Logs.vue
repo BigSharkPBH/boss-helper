@@ -1,7 +1,7 @@
 <script lang="tsx" setup>
 import { reactive, ref } from 'vue'
 
-import JobCard from '@/components/JobCard.vue'
+import JobCard from '@/components/Jobcard.vue'
 import { TableColumn } from '@nuxt/ui'
 import { useHelper,Log } from '@/composables/useHelper'
 const helper = useHelper()

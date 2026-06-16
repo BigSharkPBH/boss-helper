@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { h, reactive, ref } from 'vue'
 
-import JobCard from '@/components/JobCard.vue'
+import JobCard from '@/components/Jobcard.vue'
 import { formInfoData, defaultFormData, useConf } from '@/composables/conf'
 import { useModel } from '@/composables/useModel'
 

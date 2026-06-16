@@ -2,7 +2,7 @@
 import type { ComponentPublicInstance } from 'vue'
 import { ref } from 'vue'
 
-import JobCard from '@/components/JobCard.vue'
+import JobCard from '@/components/Jobcard.vue'
 import { useHelper } from '@/composables/useHelper'
 
 const jobSetRef = ref<Record<string, Element | ComponentPublicInstance | null>>({})
