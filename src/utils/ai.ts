@@ -5,7 +5,11 @@ export function parseGptJson<T = any>(json: string): Partial<T> | null {
   if (match) {
     json = match[1]
   }
-  return parse(json, ALL)
+  try {
+    return parse(json, ALL)
+  } catch {
+    return null
+  }
 }
 
 export function renderTemplate(template: string, data: any): string {

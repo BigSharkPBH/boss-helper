@@ -1,4 +1,3 @@
-import { UserContent } from 'ai'
 import { ref } from 'vue'
 
 import { defineUnlistedScript } from '#imports'
@@ -7,10 +6,14 @@ import { createLazyObject, WorkflowData } from '@/composables/useApplying/type'
 import { HelperContext, JobData } from '@/composables/useHelper'
 import { getRootVue, useHookVueData, useHookVueFn } from '@/composables/useVue'
 import { run } from '@/index'
+import { counter } from '@/message'
+import { FormDataInput } from '@/types/formData'
 import elmGetter from '@/utils/elmGetter'
 import { logger } from '@/utils/logger'
 
+import { GeekChatClientManager } from './chat'
 import { BoosJobData, bossWorkflow } from './delivery'
+import { uploadImage } from './requests'
 import { BossZpDetailData, BossZpJobItemData } from './types'
 
 function removeAd() {
@@ -117,6 +120,12 @@ function convertBossZpJobItemToJobData(item: BossZpJobItemData): JobData {
 }
 
 export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}> {
+  private static instance: HTMLElement | null = null
+  label = 'Boss直聘'
+  key = 'boss'
+
+  geek!: GeekChatClientManager
+
   _page = ref({ page: 1, pageSize: 15 })
   _pageHasMore = ref(true)
   _jobDetail = ref<BossZpDetailData>()
@@ -147,6 +156,12 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
 
   get uid() {
     // return window?.Cookie.get('bst') // token ?
+    if (!window._PAGE.encryptUserId) {
+      useToast().add({
+        color: 'error',
+        title: '未获取到用户ID，可能会出现奇怪bug, 请尝试刷新页面或反馈',
+      })
+    }
     return window._PAGE.encryptUserId
   }
 
@@ -162,12 +177,6 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
     const ctx = new BossHelperCtx()
     ctx.rootVue = await getRootVue()
     ctx.workflow = await bossWorkflow(ctx)
-    if (!ctx.uid) {
-      useToast().add({
-        color: 'error',
-        title: '未获取到用户ID，可能会出现奇怪bug, 请尝试刷新页面或反馈',
-      })
-    }
     return ctx
   }
 
@@ -202,27 +211,77 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
     await this.workflow.executeAll(this._jobDataMap)
   }
 
-  async sendMessage(jobKey: string, msg: UserContent) {
-    logger.info('发送消息', { jobKey, msg })
+  async sendMessage(data: WorkflowData<BoosJobData, {}>, msgs: FormDataInput['value']) {
+    logger.info('发送消息', { jobKey: data.jobData.key, msg: msgs })
+
+    const stanza = {
+      uid: Number(data.rawData.boss.data.bossId),
+      friendSource: data.rawData.detail.bossInfo.bossSource ?? 0,
+      encryptUid: data.rawData.jobitem.encryptBossId,
+      encryptGid: '',
+      clientMid: Date.now(),
+    }
+    if (typeof msgs === 'string') {
+      msgs = [{ type: 'text', content: msgs }]
+    }
+    for (const msg of msgs) {
+      var m
+      if (msg.type === 'image') {
+        const response = await counter.getImage(msg.image)
+        if (!response.success) {
+          throw new Error('图片未上传或已过期')
+        }
+        const u8Array = new Uint8Array(response.buffer)
+        const file = new File([u8Array.buffer], response.name, { type: response.type })
+        const img = await uploadImage(data.rawData.boss.data.securityId, file)
+
+        m = this.geek.msgBuilder.createImageMessage(stanza, {
+          content: {
+            iid: 0,
+            ...img,
+          },
+        })
+      } else if (msg.type === 'text') {
+        m = this.geek.msgBuilder.createTextMessage(stanza, {
+          text: msg.content,
+        })
+      } else {
+        throw new Error('不支持的消息类型:' + msg['type'])
+      }
+      this.geek.client.publish('chat', this.geek.msgBuilder.encode(m), {
+        qos: 1,
+        retain: true,
+      })
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+    }
   }
 
   async onMount(path?: string) {
     if (!path) {
       path = this.rootVue.$route.path
     }
+
+    try {
+      if (await elmGetter.get('boss-helper-job', 3000)) {
+        return
+      }
+    } catch {}
+
+    if (BossHelperCtx.instance) {
+      BossHelperCtx.instance.remove()
+      BossHelperCtx.instance = null
+    }
     // TODO: 移除menu, 可能导致nuxtui实例冲突
     // if (!document.querySelector('boss-helper-menu')) {
     //   const menuElement = document.createElement('boss-helper-menu')
     //   document.body.appendChild(menuElement)
     // }
-
-    if (document.querySelector('boss-helper-job')) return
-
     const elm = await elmGetter.get(
       '.job-search-wrapper,.job-recommend-main,.page-jobs .page-jobs-main',
     )
-    const appElement = document.createElement('boss-helper-job')
 
+    const appElement = document.createElement('boss-helper-job')
+    BossHelperCtx.instance = appElement
     elm.insertBefore(appElement, elm.firstChild)
     removeAd()
 
@@ -234,7 +293,8 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
 
     this.initNetConf()
     const contentElm = elm.querySelector<HTMLDivElement>('.recommend-result-inner')
-
+    this.geek = new GeekChatClientManager()
+    await this.geek.connect()
     watch(
       appearanceConf.value,
       (v) => {
@@ -277,6 +337,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
             jobData = {
               jobitem: item,
               detail: createLazyObject('岗位详情获取'),
+              boss: createLazyObject('Boss信息获取'),
             }
           }
           this._jobDataMap.set(job.key, jobData)
@@ -334,11 +395,47 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
   }
 }
 
+function shouldCaptureChatSocket(url: string | URL | undefined) {
+  return url != null && url.toString().includes('chatws')
+}
+
+// function hookChatSocket() {
+//   const NativeWebSocket = window.WebSocket
+//   const HOOK_SYMBOL = Symbol('__IS_HOOKED__')
+
+//   if (!(NativeWebSocket as any)[HOOK_SYMBOL]) {
+//     window.WebSocket = new Proxy(NativeWebSocket, {
+//       construct(target, args, newTarget) {
+//         const socket = Reflect.construct(target, args, newTarget)
+
+//         const [url] = args as [string | URL | undefined, string | string[] | undefined]
+
+//         if (!shouldCaptureChatSocket(url)) {
+//           return socket
+//         }
+//         BossHelperCtx.setSocket(socket)
+//         socket.addEventListener('open', () => {
+//           BossHelperCtx.setSocket(socket)
+//         })
+//         socket.addEventListener('close', () => {
+//           BossHelperCtx.setSocket(null)
+//         })
+
+//         return socket
+//       },
+//     }) as typeof WebSocket
+
+//     Object.defineProperty(window.WebSocket, HOOK_SYMBOL, {
+//       value: true,
+//       enumerable: false,
+//       writable: false,
+//       configurable: false,
+//     })
+//   }
+// }
+
 export default defineUnlistedScript(async () => {
-  //   document.documentElement.classList.toggle(
-  //     "dark",
-  //     GM_getValue("theme-dark", false)
-  //   );
+  // hookChatSocket()
 
   const bossHelpCtx = await BossHelperCtx.new()
 
@@ -360,6 +457,7 @@ export default defineUnlistedScript(async () => {
       params: {}
       fullPath: string
     }) => {
+      // hookChatSocket()
       bossHelpCtx.onMount(to.path)
     },
   )

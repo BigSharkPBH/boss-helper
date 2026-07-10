@@ -44,7 +44,7 @@ const info: LLMInfo<OpenaiLLMConf> = {
   base_url: {
     desc: '可使用中转/代理API, 前提是符合openai的规范, 需要填写base api地址',
     type: 'input',
-    format: 'menu',
+    // format: 'menu', // TODO: 修复用户体验, 当前创建有问题, 要多次回车/点击
     config: {
       placeholder: 'https://api.openai.com/v1',
       items: [
@@ -79,7 +79,7 @@ const info: LLMInfo<OpenaiLLMConf> = {
     },
     value: 'deepseek-chat',
     type: 'input',
-    format: 'menu',
+    // format: 'menu',
     required: true,
   },
   responses: {

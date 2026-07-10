@@ -138,3 +138,27 @@ export function errorHandle(e: any): string {
   }
   return `${e}`
 }
+
+export function getUuid(e: number, t: number) {
+  var r
+  var i
+  var n = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')
+  var o = []
+  t = t || n.length
+  if (e) {
+    for (r = 0; r < e; r++) {
+      o[r] = n[(Math.random() * t) | 0]
+    }
+  } else {
+    o[8] = o[13] = o[18] = o[23] = '-'
+    o[14] = '4'
+    r = 0
+    for (; r < 36; r++) {
+      if (!o[r]) {
+        i = (Math.random() * 16) | 0
+        o[r] = n[r == 19 ? (i & 3) | 8 : i]
+      }
+    }
+  }
+  return o.join('')
+}

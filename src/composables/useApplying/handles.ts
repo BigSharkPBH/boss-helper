@@ -417,7 +417,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
 
         // await buf.send()
 
-        ctx.helper.sendMessage?.(data.jobData.key, msg)
+        await ctx.helper.sendMessage?.(data, msg)
       }
     },
     { label: '自定义招呼语' },
@@ -434,62 +434,11 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
       }
       return async (ctx, data) => {
         const msg = await ctx.helper.chatModel.chat('greetings', data).then((r) => r.text)
-        ctx.helper.sendMessage?.(data.jobData.key, msg)
-        // const chatInput = chatInputInit(model)
-        // try {
-        //   if (data.bossData == null) {
-        //     const bossData = await requestBossData(data.jobData.card!)
-        //     data.bossData = bossData
-        //   }
-        //   const { content, prompt, reasoning_content } = await gpt.message(
-        //     {
-        //       data: {
-        //         data: data.jobData,
-        //         boss: data.bossData,
-        //         card: data.jobData.card!,
-        //         amap: {},
-        //       },
-        //       // onStream: chatInput.handle,
-        //       onPrompt: (s) => chatBossMessage(data, s),
-        //     },
-        //     'aiGreeting',
-        //   )
-        //   data.aiGreetingQ = prompt
-        //   if (content == null) {
-        //     return
-        //   }
-        //   data.message = content
-        //   data.aiGreetingA = content
-        //   data.aiGreetingR = reasoning_content
-        //   // chatInput.end(content)
-        //   const buf = new Message({
-        //     form_uid: uid.toString(),
-        //     to_uid: data.bossData.data.bossId.toString(),
-        //     to_name: data.bossData.data.encryptBossId, // encryptUserId
-        //     content,
-        //   })
-        //   buf.send()
-        // } catch (e) {
-        //   // chatInput.end('Err~')
-        // return {
-        //   isSkip: true,
-        //   reason: errorHandle(e),
-        // }
-        // }
+        await ctx.helper.sendMessage?.(data, msg)
       }
     },
     { label: 'AI招呼语', state: 'ai', stateMsg: '生成招呼语中' },
   )
-
-  // greeting: defineTaskHandler<C, T,S>('招呼语生成', (ctx) => {
-  //   if (ctx.helper.conf.formData.aiGreeting.enable) {
-  //     // AI招呼语
-  //     return aiGreeting()
-  //   } else if (ctx.helper.conf.formData.customGreeting.enable) {
-  //     // 自定义招呼语
-  //     return customGreeting()
-  //   }
-  // }),
 
   amap = defineTaskHandler<C, T, S>('高德地图', (ctx) => {
     if (!ctx.helper.conf.formData.amap.enable) {

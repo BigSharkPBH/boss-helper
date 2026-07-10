@@ -54,6 +54,13 @@ export class ContentCounter implements BackgroundCounter {
     return this.background.fetch(...args)
   }
 
+  async getImage(...args: Parameters<BackgroundCounter['getImage']>) {
+    return this.background.getImage(...args)
+  }
+  async setImage(...args: Parameters<BackgroundCounter['setImage']>) {
+    return this.background.setImage(...args)
+  }
+
   async storageGet<T>(key: string, defaultValue: T): Promise<T>
   async storageGet<T>(key: string): Promise<T | null>
   async storageGet<T>(key: string, defaultValue?: T): Promise<T | null> {

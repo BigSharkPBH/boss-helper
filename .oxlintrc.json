@@ -8,5 +8,6 @@
         "allowShortCircuit": true
       }
     ]
-  }
+  },
+  "ignorePatterns": ["*.min.js"]
 }

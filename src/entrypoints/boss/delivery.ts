@@ -2,11 +2,13 @@ import { TaskRegistry, taskResult } from '@/composables/useApplying/handles'
 import { defineTaskHandler, defineTaskWorkflow } from '@/composables/useApplying/type'
 
 import { BossHelperCtx } from '.'
-import { BossZpJobItemData, BossZpDetailData } from './types'
+import { getBossData, sendPublishReq } from './requests'
+import { BossZpJobItemData, BossZpDetailData, BossZpBossData } from './types'
 
 export type BoosJobData = {
   jobitem: BossZpJobItemData
   detail: BossZpDetailData
+  boss: BossZpBossData
 }
 
 const tasks = new TaskRegistry<BossHelperCtx, BoosJobData>()
@@ -93,11 +95,7 @@ export const bossWorkflow = defineTaskWorkflow<BossHelperCtx, BoosJobData>(
   tasks.aiFiltering({ deps: ['岗位详情获取'] }), // AI过滤
 
   defineTaskHandler('岗位投递', () => async (_, { rawData }) => {
-    // await sendPublishReq({
-    //   securityId: rawData.jobitem.securityId,
-    //   encryptJobId: rawData.jobitem.encryptJobId,
-    // })
-    logger.info('发送投递请求', {
+    await sendPublishReq({
       securityId: rawData.jobitem.securityId,
       encryptJobId: rawData.jobitem.encryptJobId,
     })
@@ -107,6 +105,22 @@ export const bossWorkflow = defineTaskWorkflow<BossHelperCtx, BoosJobData>(
     }
   }), // 投递
 
-  tasks.customGreeting({ deps: ['岗位详情获取', '岗位投递'] }), // 自定义招呼语
-  tasks.aiGreeting({ deps: ['岗位详情获取', '岗位投递'] }), // AI招呼语
+  defineTaskHandler('Boss信息获取', () => async (ctx, { rawData }) => {
+    // await sendPublishReq({
+    //   securityId: rawData.jobitem.securityId,
+    //   encryptJobId: rawData.jobitem.encryptJobId,
+    // })
+    logger.info('获取Boss信息', {
+      securityId: rawData.jobitem.securityId,
+      encryptJobId: rawData.jobitem.encryptJobId,
+    })
+    const bossData = await getBossData({
+      securityId: rawData.jobitem.securityId,
+      encryptUserId: ctx.helper.uid,
+    })
+    rawData.boss = bossData
+  }), // Boss信息获取
+
+  tasks.customGreeting({ deps: ['岗位详情获取', '岗位投递', 'Boss信息获取'] }), // 自定义招呼语
+  tasks.aiGreeting({ deps: ['岗位详情获取', '岗位投递', 'Boss信息获取'] }), // AI招呼语
 )

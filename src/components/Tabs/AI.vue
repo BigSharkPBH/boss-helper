@@ -74,7 +74,15 @@ function change(v: Partial<FormDataAi>) {
     </div>
     <div>
       <LLMModelManage>
-        <UButton color="primary" data-help="配置需要使用的LLM大模型" @click="aiConfBoxShow = true">
+        <UButton
+          color="primary"
+          data-help="配置需要使用的LLM大模型"
+          @click="
+            () => {
+              aiConfBoxShow = true
+            }
+          "
+        >
           模型配置
         </UButton>
       </LLMModelManage>

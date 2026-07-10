@@ -25,7 +25,7 @@ type MessageRole = (typeof role)[number]
 
 export interface Message extends ChatMessageProps {
   uiRole: MessageRole
-  messages?: ModelMessage[]
+  // messages?: ModelMessage[]
 }
 
 export class VueChatState<UI_MESSAGE extends UIMessage> implements ChatState<UI_MESSAGE> {
@@ -125,6 +125,7 @@ export class ChatModel {
     const agent = new ToolLoopAgent({
       model: provider.chat(conf.data?.model || 'gpt-4o'),
       output: opt?.json ? Output.json() : Output.text(),
+      allowSystemInMessages: true,
     })
     this.agents.set(name, [agent, conf, model])
     return true
@@ -218,7 +219,6 @@ ${data.jobData.jobDescription}`,
         src: modelConf.data?.avatar,
         alt: modelConf.data?.model,
       },
-      messages,
     }
     let index = -1
     const stream = await agent.stream({
@@ -282,7 +282,7 @@ ${data.jobData.jobDescription}`,
           msg.parts.push(part)
           state.replaceMessage(index, msg)
         }
-        logger.debug('Received message chunk', chunk)
+        // logger.debug('Received message chunk', chunk)
       }
       state.status = 'ready'
     } catch (e) {

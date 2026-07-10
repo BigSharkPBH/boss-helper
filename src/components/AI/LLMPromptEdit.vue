@@ -291,7 +291,17 @@ onMounted(() => {
     </template>
 
     <template #footer>
-      <UButton color="neutral" variant="outline" @click="show = false"> 关闭 </UButton>
+      <UButton
+        color="neutral"
+        variant="outline"
+        @click="
+          () => {
+            show = false
+          }
+        "
+      >
+        关闭
+      </UButton>
       <UButton color="neutral" variant="soft" @click="test"> 测试 </UButton>
       <UButton color="primary" @click="savePrompt"> 保存 </UButton>
     </template>
@@ -301,6 +311,7 @@ onMounted(() => {
     title="Prompt 测试"
     :ui="{ content: 'sm:max-w-3xl' }"
     :dismissible="false"
+    scrollable
   >
     <template #body>
       <div class="flex gap-2 mb-4" ref="testModel">
@@ -396,7 +407,17 @@ onMounted(() => {
       </div>
     </template>
     <template #footer>
-      <UButton color="neutral" variant="outline" @click="testDialog = false"> 取消 </UButton>
+      <UButton
+        color="neutral"
+        variant="outline"
+        @click="
+          () => {
+            testDialog = false
+          }
+        "
+      >
+        取消
+      </UButton>
       <UButton color="primary" @click="testJob">
         {{ testJobStop ? '开始测试' : '停止测试' }}
       </UButton>

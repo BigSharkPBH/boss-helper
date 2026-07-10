@@ -83,7 +83,7 @@ export interface FormDataSelect {
 }
 
 export interface FormDataInput {
-  value: string
+  value: string | CustomGreetingItem[]
   enable: boolean
 }
 
@@ -123,6 +123,26 @@ export interface FormDataAi {
   prompt: Prompt
   enable: boolean
 }
+
+export type CustomGreetingItemText = {
+  type: 'text'
+  content: string
+}
+
+export type CustomGreetingItemImage = {
+  type: 'image'
+  // image: Record<
+  //   string,
+  //   { meta?: any; model?: File } & (
+  //     | { url: string; base64?: undefined }
+  //     | { url?: undefined; base64: string }
+  //   )
+  // >
+  image: string
+  model?: File
+}
+
+export type CustomGreetingItem = CustomGreetingItemText | CustomGreetingItemImage
 
 interface ConfDelay {
   deliveryStarts: number

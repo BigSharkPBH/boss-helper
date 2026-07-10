@@ -1,6 +1,5 @@
 import { Toast } from '@nuxt/ui/runtime/composables/useToast.js'
 import { extendRef } from '@vueuse/core'
-import { UserContent } from 'ai'
 import { Reactive, ref } from 'vue'
 import { Ref } from 'vue'
 
@@ -10,6 +9,7 @@ import type { BossHelperError } from '@/composables/useApplying/deliverError'
 import { TaskResult, WorkflowData } from '@/composables/useApplying/type'
 import { useModel } from '@/composables/useModel'
 import { ChatModel } from '@/composables/useModel/test'
+import { FormDataInput } from '@/types/formData'
 
 import { initNetConf, NetConf } from './netConf'
 import { Log, JobData, LogData } from './type'
@@ -80,13 +80,16 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
   abstract loadMoreJob(delay: Promise<any>): Promise<boolean>
   abstract onMount(): Promise<void>
   abstract start(): Promise<void>
-  abstract sendMessage(jobKey: string, msg: UserContent): Promise<void>
+  abstract sendMessage(data: WorkflowData<T, S>, msg: FormDataInput['value']): Promise<void>
   abstract get uid(): string
   abstract get userInfo(): {
     id: string
     name: string
     avatar: string
   }
+  abstract get key(): string
+  abstract get label(): string
+
   initNetConf() {
     initNetConf().then((data) => {
       this.netConf.value = data

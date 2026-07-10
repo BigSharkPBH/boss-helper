@@ -95,7 +95,7 @@ export default defineConfig({
           },
           slideover: {
             slots: {
-              content: 'z-9999',
+              content: 'z-150',
             },
           },
         },

@@ -12,13 +12,7 @@ const enable = defineModel<boolean>('enable', { required: true })
 </script>
 
 <template>
-  <UFormField
-    :data-help="help"
-    :ui="{
-      container: 'max-w-3/4',
-    }"
-    :title="help"
-  >
+  <UFormField :data-help="help" :title="help">
     <template #label>
       <UFieldGroup class="flex flex-row gap-1 items-center">
         <UCheckbox v-model="enable" :label size="sm" />
@@ -29,7 +23,11 @@ const enable = defineModel<boolean>('enable', { required: true })
           variant="link"
           size="sm"
           :disabled
-          @click.stop="include = !include"
+          @click.stop="
+            () => {
+              include = !include
+            }
+          "
         >
           {{ include ? '包含' : '排除' }}
         </UButton>

@@ -144,24 +144,50 @@ function create() {
   >
     <template #body>
       <div class="overflow-y-auto" style="max-height: 60vh; padding: 20px">
-        <UFormField>
+        <UFormField :ui="{ root: 'flex max-sm:flex-col justify-between gap-4 items-center' }">
           <template #label>
             <span :style="{ background: createColor }" class="size-2"></span>
             <span>名称</span></template
           >
           <UInput v-model="createName" />
         </UFormField>
-
-        <div class="mt-4">
-          <LLMForm v-model="llmFormData" />
-        </div>
+        <UTheme
+          :ui="{
+            formField: {
+              root: 'flex max-sm:flex-col justify-between gap-4 items-center',
+            },
+          }"
+        >
+          <div class="mt-4">
+            <LLMForm v-model="llmFormData" />
+          </div>
+        </UTheme>
       </div>
     </template>
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <UButton color="neutral" variant="outline" @click="show = false"> 取消 </UButton>
-        <UButton color="neutral" @click="testShow = true"> 测试 </UButton>
+        <UButton
+          color="neutral"
+          variant="outline"
+          @click="
+            () => {
+              show = false
+            }
+          "
+        >
+          取消
+        </UButton>
+        <UButton
+          color="neutral"
+          @click="
+            () => {
+              testShow = true
+            }
+          "
+        >
+          测试
+        </UButton>
         <UButton @click="create"> 保存 </UButton>
       </div>
     </template>
@@ -175,7 +201,15 @@ function create() {
     <template #body>
       <UFieldGroup class="mb-4">
         <template v-for="(example, key) in testExample" :key="key">
-          <UButton v-for="(item, index) in example" :key="key + index" @click="testIn = item">
+          <UButton
+            v-for="(item, index) in example"
+            :key="key + index"
+            @click="
+              () => {
+                testIn = item
+              }
+            "
+          >
             {{ key }}
             {{ index + 1 }}
           </UButton>
@@ -189,7 +223,17 @@ function create() {
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <UButton color="neutral" variant="outline" @click="testShow = false"> 返回 </UButton>
+        <UButton
+          color="neutral"
+          variant="outline"
+          @click="
+            () => {
+              testShow = false
+            }
+          "
+        >
+          返回
+        </UButton>
         <UButton @click="test"> 请求 </UButton>
       </div>
     </template>

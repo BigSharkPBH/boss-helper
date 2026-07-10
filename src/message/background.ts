@@ -1,11 +1,25 @@
 import type { Adapter, Message, OnMessage, SendMessage } from 'comctx'
 import { defineProxy } from 'comctx'
+import { openDB } from 'idb'
 
 import type { Browser } from '#imports'
 import { browser } from '#imports'
 import type { ResponseType } from '@/utils/request'
 
 export const userKey = 'local:conf-user'
+
+const DB_NAME = 'ExtensionGlobalDB'
+const STORE_NAME = 'images'
+
+async function initDB() {
+  return openDB(DB_NAME, 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME)
+      }
+    },
+  })
+}
 
 export class BackgroundCounter {
   async request(args: {
@@ -56,6 +70,39 @@ export class BackgroundCounter {
 
   async fetch(...args: Parameters<typeof fetch>) {
     return await fetch(...args)
+  }
+  async getImage(key: string): Promise<
+    | { success: false }
+    | {
+        success: true
+        name: string
+        type: string
+        buffer: number[]
+      }
+  > {
+    const db = await initDB()
+    const file: File | undefined = await db.get(STORE_NAME, key)
+    if (!file) {
+      return { success: false }
+    }
+    const arrayBuffer = await file.arrayBuffer()
+    return {
+      success: true,
+      name: file.name,
+      type: file.type,
+      buffer: Array.from(new Uint8Array(arrayBuffer)),
+    }
+  }
+  async setImage(opt: {
+    name: string
+    type: string
+    buffer: number[]
+  }): Promise<{ success: boolean; key: string }> {
+    const db = await initDB()
+    const file = new File([new Uint8Array(opt.buffer).buffer], opt.name, { type: opt.type })
+    const key = `img-${await calculateFileMD5(file)}`
+    await db.put(STORE_NAME, file, key)
+    return { success: true, key }
   }
 }
 

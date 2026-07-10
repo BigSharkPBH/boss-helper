@@ -45,7 +45,6 @@ function onClient(jobKey: string) {
 }
 
 function isMessage(message: UIMessage): message is Message {
-  logger.debug('Checking message:', message)
   return true
 }
 
@@ -179,7 +178,11 @@ onUnmounted(() => {
           size="md"
           :color="following ? 'primary' : 'neutral'"
           variant="ghost"
-          @click="following = !following"
+          @click="
+            () => {
+              following = !following
+            }
+          "
           icon="i-lucide-accessibility"
           title="自动跟随"
         >
@@ -188,7 +191,11 @@ onUnmounted(() => {
           size="md"
           color="neutral"
           variant="ghost"
-          @click="open = false"
+          @click="
+            () => {
+              open = false
+            }
+          "
           icon="i-lucide-x"
           title="关闭"
         >
@@ -232,11 +239,7 @@ onUnmounted(() => {
               />
 
               <p v-else-if="isTextUIPart(part)" class="whitespace-pre-wrap">
-                {{
-                  message.uiRole === 'filtering' && part.state === 'done'
-                    ? parseFiltering(part.text).message
-                    : part.text
-                }}
+                {{ message.uiRole === 'filtering' ? parseFiltering(part.text).message : part.text }}
               </p>
             </template>
           </template>

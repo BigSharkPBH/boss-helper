@@ -4,5 +4,6 @@
   "singleQuote": true,
   "sortImports": {
     "partitionByComment": true
-  }
+  },
+  "ignorePatterns": ["*.min.js"]
 }

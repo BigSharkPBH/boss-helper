@@ -31,34 +31,41 @@
     "ai": "^6.0.191",
     "codejar": "^4.3.0",
     "comctx": "^1.6.1",
+    "idb": "^8.0.3",
+    "mqtt": "^5.15.1",
     "partial-json": "^0.1.7",
     "serialize-error": "^13.0.1",
-    "tailwindcss": "^4.2.4",
-    "vue": "^3.5.32"
+    "spark-md5": "^3.0.2",
+    "tailwindcss": "^4.3.1",
+    "vue": "^3.5.38"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
     "@types/chrome": "^0.1.40",
     "@types/node": "^25.6.0",
+    "@types/spark-md5": "^3.0.5",
     "@vitejs/plugin-vue-jsx": "^5.1.5",
     "@vue/tsconfig": "^0.9.1",
     "@vueuse/core": "^14.2.1",
     "@wxt-dev/module-vue": "^1.0.3",
-    "lint-staged": "^16.4.0",
+    "lint-staged": "^17.0.7",
     "npm-run-all": "^4.1.5",
     "openapi-typescript": "^7.13.0",
-    "oxfmt": "^0.45.0",
+    "oxfmt": "^0.54.0",
     "oxlint": "^1.60.0",
-    "oxlint-tsgolint": "^0.21.1",
+    "oxlint-tsgolint": "^0.23.0",
     "proto2api": "^0.0.8",
-    "protobufjs": "^8.0.1",
+    "protobufjs": "^8.6.3",
     "sass": "^1.99.0",
     "ts-proto": "^2.11.6",
     "typescript": "^6.0.3",
     "uid": "^2.0.2",
     "vite-plugin-tailwind-shadowdom": "^1.1.1",
     "vue-tsc": "^3.2.6",
-    "wxt": "^0.20.24"
+    "wxt": "^0.20.26"
+  },
+  "overrides": {
+    "vite": "^8.0.16"
   },
   "lint-staged": {
     "*": "oxfmt --no-error-on-unmatched-pattern",
