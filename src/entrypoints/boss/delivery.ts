@@ -37,48 +37,7 @@ export const bossWorkflow = defineTaskWorkflow<BossHelperCtx, BoosJobData>(
   defineTaskHandler(
     '岗位详情获取',
     () => async (ctx, job) => {
-      // const detail = await requestDetail({
-      //   securityId: job.rawData.jobitem.securityId,
-      //   lid: job.rawData.jobitem.encryptJobId,
-      // }).then((r) => r.zpData)
-
-      ctx.helper._clickJobCardAction(job.rawData.jobitem)
-      const detail = await new Promise<BossZpDetailData>((resolve, reject) => {
-        setTimeout(() => {
-          reject(new Error('bossZpDetailData获取超时'))
-        }, 1000 * 60)
-        const interval = setInterval(() => {
-          if (
-            ctx.helper._jobDetail.value &&
-            ctx.helper._jobDetail.value.lid === job.rawData.jobitem.lid
-          ) {
-            resolve(ctx.helper._jobDetail.value)
-            clearInterval(interval)
-          }
-        }, 100)
-      })
-
-      job.rawData.detail = detail
-      job.jobData = {
-        ...job.jobData,
-        activeTime: detail.brandComInfo.activeTime,
-        activeTimeStr: detail.bossInfo.activeTimeDesc,
-        jobDescription: detail.jobInfo.postDescription,
-        city: detail.jobInfo.locationName,
-        address: detail.jobInfo.address,
-        addressCoords: [detail.jobInfo.longitude, detail.jobInfo.latitude],
-        boss: {
-          ...job.jobData.boss,
-          isOnline: detail.bossInfo.bossOnline,
-          isCertificated: detail.bossInfo.certificated,
-        },
-        brand: {
-          ...job.jobData.brand,
-          labels: detail.brandComInfo.labels,
-          introduce: detail.brandComInfo.introduce,
-          stageName: detail.brandComInfo.stageName,
-        },
-      }
+      await ctx.helper.onJobCardClick(job.jobData.key)
     },
     {
       state: 'request',

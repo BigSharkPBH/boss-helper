@@ -6,8 +6,10 @@ import { sameCompanyKey, sameHrKey } from '../../entrypoints/boss/requests'
 import { defineTaskHandler, JobStatus, TaskContext, TaskResult } from './type'
 import { parseFiltering, rangeMatch, rangeMatchFormat } from './utils'
 
-export class DependencyMissingError {
-  constructor(public taskId: string) {}
+export class DependencyMissingError extends Error {
+  constructor(public taskId: string) {
+    super(`Task dependency missing: ${taskId}`)
+  }
 }
 
 export class HelperConfigError {
@@ -402,7 +404,20 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
         // }
         let msg = ctx.helper.conf.formData.customGreeting.value
         if (ctx.helper.conf.formData.greetingVariable.value) {
-          msg = renderTemplate(msg, data)
+          if (Array.isArray(msg)) {
+            msg = msg.map((item) => {
+              if (item.type === 'text') {
+                return {
+                  ...item,
+                  content: renderTemplate(item.content, data),
+                }
+              } else {
+                return item
+              }
+            })
+          } else {
+            msg = renderTemplate(msg, data)
+          }
         }
 
         // ctx.message = msg

@@ -2,7 +2,7 @@ import { ref } from 'vue'
 
 import { defineUnlistedScript } from '#imports'
 import { appearanceConf } from '@/composables/conf'
-import { createLazyObject, WorkflowData } from '@/composables/useApplying/type'
+import { createLazyObject, isInitialized, WorkflowData } from '@/composables/useApplying/type'
 import { HelperContext, JobData } from '@/composables/useHelper'
 import { getRootVue, useHookVueData, useHookVueFn } from '@/composables/useVue'
 import { run } from '@/index'
@@ -308,6 +308,54 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
     )
   }
 
+  async onJobCardClick(key: string) {
+    // const detail = await requestDetail({
+    //   securityId: job.rawData.jobitem.securityId,
+    //   lid: job.rawData.jobitem.encryptJobId,
+    // }).then((r) => r.zpData)
+    const job = this.jobMaps.get(key)
+    if (!job) {
+      throw new Error('未找到job数据')
+    }
+    if (isInitialized(job.rawData.detail)) {
+      return
+    }
+    this._clickJobCardAction(job.rawData.jobitem)
+    const detail = await new Promise<BossZpDetailData>((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('bossZpDetailData获取超时'))
+      }, 1000 * 60)
+      const interval = setInterval(() => {
+        if (this._jobDetail.value && this._jobDetail.value.lid === job.rawData.jobitem.lid) {
+          resolve(this._jobDetail.value)
+          clearInterval(interval)
+        }
+      }, 100)
+    })
+
+    job.rawData.detail = detail
+    const targetJob = job.jobData
+    targetJob.activeTime = detail.brandComInfo.activeTime
+    targetJob.activeTimeStr = detail.bossInfo.activeTimeDesc
+    targetJob.jobDescription = detail.jobInfo.postDescription
+    targetJob.city = detail.jobInfo.locationName
+    targetJob.address = detail.jobInfo.address
+    targetJob.addressCoords = [detail.jobInfo.longitude, detail.jobInfo.latitude]
+
+    targetJob.boss = {
+      ...targetJob.boss,
+      isOnline: detail.bossInfo.bossOnline,
+      isCertificated: detail.bossInfo.certificated,
+    }
+
+    targetJob.brand = {
+      ...targetJob.brand,
+      labels: detail.brandComInfo.labels,
+      introduce: detail.brandComInfo.introduce,
+      stageName: detail.brandComInfo.stageName,
+    }
+    this.jobMaps.set(key, job)
+  }
   async _initJobList() {
     useHookVueData(
       '#wrap .page-job-wrapper,.job-recommend-main,.page-jobs-main',
@@ -395,9 +443,9 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
   }
 }
 
-function shouldCaptureChatSocket(url: string | URL | undefined) {
-  return url != null && url.toString().includes('chatws')
-}
+// function shouldCaptureChatSocket(url: string | URL | undefined) {
+//   return url != null && url.toString().includes('chatws')
+// }
 
 // function hookChatSocket() {
 //   const NativeWebSocket = window.WebSocket

@@ -27,9 +27,9 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
   jobResultMaps: Reactive<Map<string, TaskResult>>
 
   abstract jobList: Ref<JobData[]>
-  currentJob: Ref<string | null>
   abstract jobMaps: Map<string, WorkflowData<T, S>>
 
+  currentJob: Ref<string | null>
   _logs: Ref<Log[]>
   logs: {
     add: (job: JobData, err?: BossHelperError, logdata?: LogData, msg?: string) => void
@@ -132,5 +132,9 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
       ...opt?.toast,
       title: msg,
     })
+  }
+
+  async onJobCardClick(_key: string) {
+    throw new Error('Method not implemented.')
   }
 }

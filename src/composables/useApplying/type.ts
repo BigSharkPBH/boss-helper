@@ -136,16 +136,19 @@ export function defineTaskWorkflow<C extends HelperContext<C, T, S>, T, S = {}>(
 
   return async (_ctx: C) => useDeliveryWorkflow(allDefinitions, _ctx)
 }
-
 export function createLazyObject<T extends object>(taskId: string): T {
   let _data: T | undefined
   let _initialized = false
 
   return new Proxy({} as T, {
     get(target, prop, receiver) {
-      if (!_initialized) {
-        if (prop === '__isProxy') return true
+      if (prop === '__isProxy') return true
+      if (prop === '__initialized') return _initialized
 
+      if (typeof prop === 'symbol' || prop.startsWith('__v_')) {
+        return undefined
+      }
+      if (!_initialized) {
         throw new DependencyMissingError(taskId)
       }
       return Reflect.get(_data!, prop, receiver)
@@ -159,10 +162,29 @@ export function createLazyObject<T extends object>(taskId: string): T {
       return true
     },
     getOwnPropertyDescriptor(target, prop) {
+      if (
+        prop === '__isProxy' ||
+        prop === '__initialized' ||
+        (typeof prop === 'string' && prop.startsWith('__v_'))
+      ) {
+        return {
+          configurable: true,
+          enumerable: false,
+          writable: false,
+          value: prop === '__isProxy' ? true : prop === '__initialized' ? _initialized : undefined,
+        }
+      }
       return _initialized ? Reflect.getOwnPropertyDescriptor(_data!, prop) : undefined
     },
     ownKeys() {
       return _initialized ? Reflect.ownKeys(_data!) : []
     },
   })
+}
+
+export function isInitialized(val: any): boolean {
+  if (val && typeof val === 'object' && val.__isProxy) {
+    return !!val.__initialized
+  }
+  return true
 }

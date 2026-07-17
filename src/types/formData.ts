@@ -83,7 +83,7 @@ export interface FormDataSelect {
 }
 
 export interface FormDataInput {
-  value: string | CustomGreetingItem[]
+  value: string | Array<CustomGreetingItem>
   enable: boolean
 }
 
