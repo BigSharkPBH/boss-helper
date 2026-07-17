@@ -17,6 +17,11 @@ Boss直聘助手, 皆在减少投递简历的麻烦, 和提高投递简历的效
 
 ## 相关链接
 
+唯一交流群:
+微信麻烦, 飞书人数限制, 所以只开tg一个~
+
+<img alt="交流群" src="./docs/img/tg.png" height="200" />
+
 Github开源地址: <https://github.com/ocyss/boss-helper>
 
 飞书反馈问卷(匿名): <https://gai06vrtbc0.feishu.cn/share/base/form/shrcnmEq2fxH9hM44hqEnoeaj8g>
