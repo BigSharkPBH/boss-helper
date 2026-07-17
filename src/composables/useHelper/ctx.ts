@@ -8,7 +8,7 @@ import { DeliveryWorkflow } from '@/composables/useApplying'
 import type { BossHelperError } from '@/composables/useApplying/deliverError'
 import { TaskResult, WorkflowData } from '@/composables/useApplying/type'
 import { useModel } from '@/composables/useModel'
-import { ChatModel } from '@/composables/useModel/test'
+import { ChatModel } from '@/composables/useModel'
 import { FormDataInput } from '@/types/formData'
 
 import { initNetConf, NetConf } from './netConf'

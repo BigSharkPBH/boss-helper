@@ -5,7 +5,7 @@ import { getToolName, isReasoningUIPart, isTextUIPart, isToolUIPart, UIMessage }
 import { appearanceConf } from '@/composables/conf'
 import { parseFiltering } from '@/composables/useApplying/utils'
 import { useHelper } from '@/composables/useHelper'
-import { VueChatState, Message } from '@/composables/useModel/test'
+import { VueChatState, Message } from '@/composables/useModel'
 
 const open = defineModel('open', { default: false })
 const following = ref(true)

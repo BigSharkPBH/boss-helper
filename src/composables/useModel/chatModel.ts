@@ -149,7 +149,7 @@ export class ChatModel {
     if (typeof model.prompt === 'string') {
       messages = [{ role: 'user', content: model.prompt }]
     } else {
-      messages = model.prompt
+      messages = jsonClone(model.prompt)
     }
     for (const i in messages) {
       if (typeof messages[i].content === 'string') {
