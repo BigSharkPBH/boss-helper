@@ -25,6 +25,7 @@ export interface FormData {
   greetingVariable: FormDataCheckbox
   activityFilter: FormDataCheckbox
   friendStatus: FormDataCheckbox
+  bossGoldMedalHr: FormDataCheckbox
   sameCompanyFilter: FormDataCheckbox
   sameHrFilter: FormDataCheckbox
   goldHunterFilter: FormDataCheckbox
@@ -45,29 +46,13 @@ export interface FormData {
   }
   record: { model?: string[]; enable: boolean }
   // animation?: "frame" | "card" | "together";
-  delay: ConfDelay
+  delayDeliveryStarts: number
+  delayDeliveryInterval: number
+  delayDeliveryPageNext: number
+  delayMessageSending: number
   version: string
-}
 
-export type FormInfoData = {
-  [key in keyof Omit<
-    FormData,
-    'configLevel' | 'aiGreeting' | 'aiFiltering' | 'delay' | 'userId' | 'version' | 'amap'
-  >]: {
-    label: string
-    'data-help'?: string
-  }
-} & {
-  configLevel: { options: Array<{ value: ConfigLevel; label: string }>; 'data-help'?: string }
-  aiGreeting: FormInfoAi
-  aiFiltering: FormInfoAi
-  delay: ConfInfoDelay
-  amap: {
-    [key in keyof FormData['amap']]: {
-      label: string
-      'data-help'?: string
-    }
-  }
+  [key: string]: any
 }
 
 export interface FormInfoAi {
@@ -143,18 +128,3 @@ export type CustomGreetingItemImage = {
 }
 
 export type CustomGreetingItem = CustomGreetingItemText | CustomGreetingItemImage
-
-interface ConfDelay {
-  deliveryStarts: number
-  deliveryInterval: number
-  deliveryPageNext: number
-  messageSending: number
-}
-
-type ConfInfoDelay = {
-  [Key in keyof ConfDelay]: {
-    label: string
-    'data-help'?: string
-    disable?: boolean
-  }
-}

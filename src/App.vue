@@ -228,7 +228,16 @@ function onPointerMove(ev: PointerEvent) {
             <template #logs><Logs /></template>
             <template #about><About /></template>
             <template #list-trailing>
-              <UButton class="ml-2" size="xs" color="primary" @click.stop="chatOpen = !chatOpen">
+              <UButton
+                class="ml-2"
+                size="xs"
+                color="primary"
+                @click.stop="
+                  () => {
+                    chatOpen = !chatOpen
+                  }
+                "
+              >
                 对话
               </UButton>
               <UButton

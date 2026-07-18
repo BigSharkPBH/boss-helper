@@ -116,6 +116,20 @@ const FROM_VERSION: [string, (from: Partial<FormData>) => Partial<FormData>][] =
       return from
     },
   ],
+  [
+    '20260718',
+    (from) => {
+      if (!('delay' in from) || typeof from.delay !== 'object') {
+        return from
+      }
+      Object.entries(from.delay as Record<string, number>).forEach(([key, value]) => {
+        // @ts-ignore
+        from[`delay${key.charAt(0).toUpperCase() + key.slice(1)}`] = value
+      })
+      delete from['delay']
+      return from
+    },
+  ],
 ]
 
 export const useConf = () => {

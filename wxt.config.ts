@@ -23,6 +23,7 @@ export default defineConfig({
         '@webext-core/messaging',
         '@webext-core/proxy-service',
         '@nuxt/ui',
+        '@nuxt/icon',
       ],
     },
     plugins: [
@@ -95,7 +96,7 @@ export default defineConfig({
           },
           slideover: {
             slots: {
-              content: 'z-150',
+              content: 'z-230',
             },
           },
         },

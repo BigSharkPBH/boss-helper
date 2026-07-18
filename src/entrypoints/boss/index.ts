@@ -1,9 +1,10 @@
 import { ref } from 'vue'
 
 import { defineUnlistedScript } from '#imports'
-import { appearanceConf } from '@/composables/conf'
+import { appearanceConf, useConf } from '@/composables/conf'
 import { createLazyObject, isInitialized, WorkflowData } from '@/composables/useApplying/type'
 import { HelperContext, JobData } from '@/composables/useHelper'
+import { AlertItem, ConfigAccordionItem } from '@/composables/useHelper/type'
 import { getRootVue, useHookVueData, useHookVueFn } from '@/composables/useVue'
 import { run } from '@/index'
 import { counter } from '@/message'
@@ -307,7 +308,215 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
       { immediate: true },
     )
   }
+  getConfigItems() {
+    const conf = useConf()
+    return computed<[AlertItem[], (ConfigAccordionItem | false)[]]>(() => {
+      return [
+        [
+          {
+            type: 'alert',
+            id: 'config-alert-1',
+            showIcon: true,
+            title: '进行配置前都请先阅读完整的帮助文档，再进行配置，如有bug请反馈',
+            color: 'success',
+            description:
+              '滚动到底部，差不多150个岗位左右，也会自动停止, 刷新或者变更期望重新获取新的岗位即可。',
+          },
+          {
+            type: 'alert',
+            id: 'config-alert-2',
+            showIcon: true,
+            color: 'success',
+            description: '使用自定义招呼语前 推荐禁用boss直聘自带招呼语',
+            actions: [
+              {
+                label: '前往',
+                color: 'neutral',
+                variant: 'subtle',
+                onClick: () => {
+                  window.open('https://www.zhipin.com/web/geek/notify-set?type=greetSet', '_blank')
+                },
+              },
+            ],
+          },
+          {
+            type: 'alert',
+            id: 'config-alert-3',
+            color: 'success',
+            description:
+              '所有配置选项皆有帮助提示，不懂用法请进入帮助模式进行查看，若是对帮助说明有疑问请反馈最好能给出改进意见。',
+          },
+        ],
+        [
+          {
+            label: '筛选配置',
+            value: 'filter',
+            items: [
+              {
+                type: 'alert',
+                id: 'filter-config-alert-enable',
+                title: '复选框打钩才会启用，别忘记打钩启用哦。保存也别忘了',
+                description: '排除和包含可点击切换，混合模式适用性过低难以配置不会考虑开发',
+                color: 'success',
+                showIcon: true,
+              },
+              {
+                type: 'div',
+                class: 'grid grid-cols-2 gap-2 mt-2 w-full',
 
+                items: [
+                  {
+                    type: 'select',
+                    key: 'company',
+                  },
+                  {
+                    type: 'select',
+                    key: 'jobTitle',
+                  },
+                  {
+                    type: 'select',
+                    key: 'jobContent',
+                  },
+                  {
+                    type: 'select',
+                    key: 'hrPosition',
+                  },
+                  conf.configLevel.intermediate && {
+                    type: 'select',
+                    key: 'jobAddress',
+                  },
+                  {
+                    type: 'div',
+                  },
+                ],
+              },
+              {
+                type: 'div',
+                class: 'flex gap-2 mt-3',
+                items: [
+                  conf.configLevel.intermediate && {
+                    type: 'salaryRange',
+                    key: 'salaryRange',
+                  },
+                  conf.configLevel.intermediate && {
+                    type: 'companySizeRange',
+                    key: 'companySizeRange',
+                  },
+                ],
+              },
+              {
+                type: 'div',
+                class: 'col-span-full flex flex-wrap gap-2 mt-3',
+                items: [
+                  conf.configLevel.intermediate && {
+                    type: 'checkbox',
+                    key: 'activityFilter',
+                  },
+                  {
+                    type: 'checkbox',
+                    key: 'goldHunterFilter',
+                  },
+                  {
+                    type: 'checkbox',
+                    key: 'friendStatus',
+                  },
+                  {
+                    type: 'checkbox',
+                    key: 'bossGoldMedalHr',
+                  },
+                  conf.configLevel.intermediate && {
+                    type: 'checkbox',
+                    key: 'sameCompanyFilter',
+                  },
+                  conf.configLevel.intermediate && {
+                    type: 'checkbox',
+                    key: 'sameHrFilter',
+                  },
+                ],
+              },
+            ],
+          },
+          conf.configLevel.intermediate && {
+            label: '招呼语配置',
+            value: 'greetings',
+            items: [{ type: 'customGreeting', key: 'customGreeting' }],
+          },
+          {
+            label: '外观配置',
+            value: 'appearance',
+            items: [{ type: 'appearance', key: 'appearance' }],
+          },
+          conf.configLevel.advanced && {
+            label: '地址配置',
+            value: 'address',
+            items: [{ type: 'address', key: 'address' }],
+          },
+          conf.configLevel.intermediate && {
+            label: '延迟配置',
+            value: 'delay',
+            items: [
+              {
+                type: 'div',
+                class: 'grid grid-cols-2 gap-3',
+                items: [
+                  {
+                    type: 'inputNumber',
+                    key: 'delayDeliveryStarts',
+                    fieldProps: {
+                      label: '投递开始',
+                      'data-help': '点击投递按钮会等待一段时间,默认值10s',
+                    },
+                    inputNumberProps: {
+                      min: 1,
+                      max: 99999,
+                    },
+                  },
+                  {
+                    type: 'inputNumber',
+                    key: 'delayDeliveryInterval',
+                    fieldProps: {
+                      label: '投递间隔',
+                      'data-help': '每个投递的间隔,太快易风控,默认值2s',
+                    },
+                    inputNumberProps: {
+                      min: 1,
+                      max: 99999,
+                    },
+                  },
+                  {
+                    type: 'inputNumber',
+                    key: 'delayDeliveryPageNext',
+                    fieldProps: {
+                      label: '投递翻页',
+                      'data-help': '投递完下一页之后等待的间隔,太快易风控,默认值60s',
+                    },
+                    inputNumberProps: {
+                      min: 1,
+                      max: 99999,
+                    },
+                  },
+                  {
+                    type: 'inputNumber',
+                    key: 'delayMessageSending',
+                    fieldProps: {
+                      label: '消息发送',
+                      'data-help':
+                        '暂未实现 ,在发送消息前允许等待一定的时间让用户来修改或手动发送,默认值5s',
+                    },
+                    inputNumberProps: {
+                      min: 1,
+                      max: 99999,
+                      disable: true,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      ]
+    })
+  }
   async onJobCardClick(key: string) {
     // const detail = await requestDetail({
     //   securityId: job.rawData.jobitem.securityId,

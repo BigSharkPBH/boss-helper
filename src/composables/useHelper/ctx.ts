@@ -12,7 +12,7 @@ import { ChatModel } from '@/composables/useModel'
 import { FormDataInput } from '@/types/formData'
 
 import { initNetConf, NetConf } from './netConf'
-import { Log, JobData, LogData } from './type'
+import { Log, JobData, LogData, ConfigAccordionItem, AlertItem } from './type'
 
 export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
   netConf: Ref<NetConf | null>
@@ -79,6 +79,8 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
 
   abstract loadMoreJob(delay: Promise<any>): Promise<boolean>
   abstract onMount(): Promise<void>
+  abstract getConfigItems(): ComputedRef<[AlertItem[], (ConfigAccordionItem | false)[]]>
+
   abstract start(): Promise<void>
   abstract sendMessage(data: WorkflowData<T, S>, msg: FormDataInput['value']): Promise<void>
   abstract get uid(): string

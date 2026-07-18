@@ -312,7 +312,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           helper.jobResultMaps.set(job.key, v)
         })
 
-        await delay(helper.conf.formData.delay.deliveryStarts, isStop)
+        await delay(helper.conf.formData.delayDeliveryStarts, isStop)
 
         for (const [index, jobData] of helper.jobList.value.entries()) {
           current.value = index + 1
@@ -329,11 +329,11 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           helper.jobMaps.set(jobData.key, data)
           helper.currentJob.value = jobData.key
           await execute(data)
-          await delay(helper.conf.formData.delay.deliveryInterval, isStop)
+          await delay(helper.conf.formData.delayDeliveryInterval, isStop)
         }
         if (isStop()) break
         const hasMore = await helper.loadMoreJob(
-          delay(helper.conf.formData.delay.deliveryPageNext, isStop),
+          delay(helper.conf.formData.delayDeliveryPageNext, isStop),
         )
         if (!hasMore) {
           status.value = 'stop'

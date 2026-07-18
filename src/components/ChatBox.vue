@@ -150,7 +150,7 @@ onUnmounted(() => {
     inset
     :dismissible="false"
     :modal="false"
-    :ui="{ body: 'flex flex-col overscroll-contain p-2', content: 'top-14' }"
+    :ui="{ body: 'flex flex-col overscroll-contain p-2', content: 'top-14 z-190' }"
     :style="{
       width: `${appearanceConf.chatBoxWidth}px`,
     }"

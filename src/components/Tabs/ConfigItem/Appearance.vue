@@ -91,8 +91,8 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
-    <div class="flex flex-row flex-wrap gap-4" data-help="外观配置">
+  <div class="flex flex-col gap-2" data-help="外观配置, 自行体会">
+    <div class="flex flex-row flex-wrap gap-4">
       <Alert
         id="appearance-alert-1"
         style="margin-bottom: 10px"

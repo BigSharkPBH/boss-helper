@@ -192,10 +192,10 @@ function create() {
       </div>
     </template>
   </UModal>
-  <UModal
+  <USlideover
     v-model:open="testShow"
     title="模型测试"
-    :ui="{ content: 'sm:max-w-[70%]' }"
+    :ui="{ content: 'max-w-lg' }"
     :dismissible="false"
   >
     <template #body>
@@ -237,5 +237,5 @@ function create() {
         <UButton @click="test"> 请求 </UButton>
       </div>
     </template>
-  </UModal>
+  </USlideover>
 </template>

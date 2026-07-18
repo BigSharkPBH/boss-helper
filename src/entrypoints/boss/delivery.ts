@@ -50,6 +50,25 @@ export const bossWorkflow = defineTaskWorkflow<BossHelperCtx, BoosJobData>(
   tasks.jobFriendStatus({ deps: ['岗位详情获取'] }), // 好友状态过滤
   tasks.jobContent({ deps: ['岗位详情获取'] }), // 工作内容筛选
 
+  defineTaskHandler(
+    '金牌面试官',
+    (ctx) => {
+      if (!ctx.helper.conf.formData.bossGoldMedalHr.value) {
+        return
+      }
+      return async (_, { rawData }) => {
+        if (
+          rawData.detail.bossInfo.avatarStickerUrl.includes(
+            '492b4ca74ee6ee7bfecf8d0d363780c68ad8b582857d894c8eae833b21840fb6',
+          )
+        ) {
+          return taskResult.skip('金牌HR')
+        }
+      }
+    },
+    { deps: ['岗位详情获取'] },
+  ), // 金牌面试官过滤
+
   tasks.amap({ deps: ['岗位详情获取'] }), // 高德地图
   tasks.aiFiltering({ deps: ['岗位详情获取'] }), // AI过滤
 
