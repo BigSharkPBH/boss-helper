@@ -25,26 +25,19 @@ jobs:
       - name: Build Extensions
         run: bun run zip
 
-      - name: Check output
+      - name: Prepare release
         run: |
-          pwd
-          ls -la
-          ls -la .output || true
-
-      - name: Remove source zip
-        run: rm -f .output/*sources.zip
-
-      - name: Check output2
-        run: |
-          pwd
-          ls -la
-          ls -la .output || true
+          mkdir release
+          cp .output/*.zip release/
+          rm -f release/*sources.zip
+          ls -lah release
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: boss-helper
-          path: .output/*.zip
+          path: release
+          if-no-files-found: error
 
   release:
     needs: build
