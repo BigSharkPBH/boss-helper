@@ -37,6 +37,8 @@ function removeAd() {
   void elmGetter.rm('.c-hot-link.hot-link')
   // 新版: 面包屑
   void elmGetter.rm('.c-breadcrumb')
+  // 新版: 职位详情页的引导(想要什么工作)
+  void elmGetter.rm('.job-detail-container .job-detail-guide-cont')
 }
 
 const initChange = useHookVueFn('#wrap .page-job-wrapper', 'pageChangeAction')

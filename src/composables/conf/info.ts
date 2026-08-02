@@ -69,7 +69,7 @@ export const formInfoData: Record<string, any> = {
     'data-help': '判断和hr是否建立过聊天，理论上能过滤的同hr，但是不同岗位的工作',
   },
   bossGoldMedalHr: {
-    label: '金牌面试官',
+    label: '过滤金牌面试官',
     'data-help': '通过头像框来判断是否是金牌面试官, 据小红书经验 金牌面试官多数是刷kpi,并不靠谱',
   },
   sameCompanyFilter: {
