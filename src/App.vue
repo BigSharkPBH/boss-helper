@@ -237,6 +237,7 @@ function onPointerMove(ev: PointerEvent) {
                     chatOpen = !chatOpen
                   }
                 "
+                data-help="显示对话框, 使用ai功能必备可以方便的查询ai的输出, 并且可以调整招呼语. 不过功能未完善, 对话框使用体验还不行"
               >
                 对话
               </UButton>
@@ -246,6 +247,7 @@ function onPointerMove(ev: PointerEvent) {
                 size="xs"
                 color="info"
                 @click.stop="tagOpen(helper.netConf.value.feedback)"
+                data-help="描述清楚, 并先检查有没有相同问题, 尽量不要重复提交问题"
               >
                 反馈
               </UButton>

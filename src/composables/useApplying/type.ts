@@ -56,6 +56,7 @@ export type TaskResult = {
   status?: JobStatus
   msg?: string
   isCache?: boolean
+  id?: string
 }
 
 export type Handler<C extends HelperContext<C, T, S>, T, S> = (

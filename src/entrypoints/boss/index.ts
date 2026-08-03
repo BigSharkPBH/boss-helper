@@ -247,9 +247,12 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
           },
         })
       } else if (msg.type === 'text') {
+        this.pendingMessages.value = msg.content
+        await delay(this.conf.formData.delayMessageSending)
         m = this.geek.msgBuilder.createTextMessage(stanza, {
-          text: msg.content,
+          text: this.pendingMessages.value,
         })
+        this.pendingMessages.value = undefined
       } else {
         throw new Error('不支持的消息类型:' + msg['type'])
       }
@@ -257,7 +260,6 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
         qos: 1,
         retain: true,
       })
-      await new Promise((resolve) => setTimeout(resolve, 1500))
     }
   }
 
@@ -305,9 +307,9 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
       (v) => {
         if (!contentElm) return
         contentElm.style.marginRight =
-          v.leftChat && v.contentOffset != 25 ? `${v.contentOffset}%` : 'unset'
+          v.leftChat && v.contentOffset != 25 ? `${v.contentOffset}%` : 'auto'
         contentElm.style.marginLeft =
-          !v.leftChat && v.contentOffset != 25 ? `${v.contentOffset}%` : 'unset'
+          !v.leftChat && v.contentOffset != 25 ? `${v.contentOffset}%` : 'auto'
       },
       { immediate: true },
     )
@@ -321,34 +323,10 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
             type: 'alert',
             id: 'config-alert-1',
             showIcon: true,
-            title: '进行配置前都请先阅读完整的帮助文档，再进行配置，如有bug请反馈',
+            title: '首次配置前请先进入帮助模式查看说明',
             color: 'success',
             description:
-              '滚动到底部，差不多150个岗位左右，也会自动停止, 刷新或者变更期望重新获取新的岗位即可。',
-          },
-          {
-            type: 'alert',
-            id: 'config-alert-2',
-            showIcon: true,
-            color: 'success',
-            description: '使用自定义招呼语前 推荐禁用boss直聘自带招呼语',
-            actions: [
-              {
-                label: '前往',
-                color: 'neutral',
-                variant: 'subtle',
-                onClick: () => {
-                  window.open('https://www.zhipin.com/web/geek/notify-set?type=greetSet', '_blank')
-                },
-              },
-            ],
-          },
-          {
-            type: 'alert',
-            id: 'config-alert-3',
-            color: 'success',
-            description:
-              '所有配置选项皆有帮助提示，不懂用法请进入帮助模式进行查看，若是对帮助说明有疑问请反馈最好能给出改进意见。',
+              '所有配置项均提供说明，获取岗位滚动至约 150 条会自动停止，刷新页面或修改求职期望后可重新获取；如遇 Bug 或帮助内容不清晰，欢迎反馈并提出改进建议。',
           },
         ],
         [
@@ -443,7 +421,29 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
           conf.configLevel.intermediate && {
             label: '招呼语配置',
             value: 'greetings',
-            items: [{ type: 'customGreeting', key: 'customGreeting' }],
+            items: [
+              {
+                type: 'alert',
+                id: 'config-alert-2',
+                showIcon: true,
+                color: 'success',
+                description: '使用自定义招呼语前 推荐禁用boss直聘自带招呼语',
+                actions: [
+                  {
+                    label: '前往',
+                    color: 'neutral',
+                    variant: 'subtle',
+                    onClick: () => {
+                      window.open(
+                        'https://www.zhipin.com/web/geek/notify-set?type=greetSet',
+                        '_blank',
+                      )
+                    },
+                  },
+                ],
+              },
+              { type: 'customGreeting', key: 'customGreeting' },
+            ],
           },
           {
             label: '外观配置',
@@ -504,8 +504,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
                     key: 'delayMessageSending',
                     fieldProps: {
                       label: '消息发送',
-                      'data-help':
-                        '暂未实现 ,在发送消息前允许等待一定的时间让用户来修改或手动发送,默认值5s',
+                      'data-help': '在发送消息前允许等待一定的时间让用户来修改或手动发送,默认值2s',
                     },
                     inputNumberProps: {
                       min: 1,

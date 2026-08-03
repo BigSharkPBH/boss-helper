@@ -63,7 +63,7 @@ export type DeliveryWorkflow<C extends HelperContext<C, T, S>, T, S> = Awaited<
 >
 
 function meginResults(res: void | TaskResult | Array<TaskResult | void>): TaskResult | void {
-  if (!res) return {}
+  if (!res) return
   if (Array.isArray(res)) {
     if (res.length === 0) return
     return res.reduce((acc: TaskResult, r) => {
@@ -77,6 +77,7 @@ function meginResults(res: void | TaskResult | Array<TaskResult | void>): TaskRe
         }
       }
       return {
+        id: acc.id || r.id,
         isSkip: acc.isSkip || r.isSkip,
         reason: [acc.reason, r.reason].filter(Boolean).join('\n') || undefined,
         status: mergedStatus,

@@ -91,7 +91,7 @@ export const formInfoData: Record<string, any> = {
   },
   aiReply: {
     label: 'AI回复',
-    'data-help': '万一消息太多，回不过来了呢，也许能和AiHR聊到地球爆炸？魔法击败魔法',
+    'data-help': '万一消息太多，回不过来了呢. 功能暂未实现',
   },
   record: {
     label: '内容记录',
@@ -312,6 +312,6 @@ export const defaultFormData: FormData = {
   delayDeliveryStarts: 3,
   delayDeliveryInterval: 5,
   delayDeliveryPageNext: 60,
-  delayMessageSending: 5,
+  delayMessageSending: 2,
   version: '20260718',
 }

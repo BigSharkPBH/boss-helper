@@ -107,7 +107,7 @@ const columns: TableColumn<Log>[] = [
 </script>
 
 <template>
-  <h1>维护当中...</h1>
+  <h1>维护当中...还没想好如何设计</h1>
   <UTable ref="tableRef" :columns="columns" :data="helper.logs.value" :height="360" />
   <UModal v-model:open="dialogData.show" title="日志详情">
     <template #body>

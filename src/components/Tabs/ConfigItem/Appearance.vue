@@ -50,9 +50,9 @@ let ticking = false
 watch(
   () => appearanceConf.value.blurCard,
   (val) => {
-    const host = document.querySelector('boss-helper-job')?.shadowRoot?.host
-    if (!host) return
-    const card = host.querySelector<HTMLDivElement>('.boss-helper-card')
+    const root = document.querySelector('boss-helper-job')?.shadowRoot
+    if (!root) return
+    const card = root.querySelector<HTMLDivElement>('.boss-helper-card')
     const blur = card?.querySelector<HTMLDivElement>('.card-grid-overlay')
     if (!blur || !card) return
     if (!val) {

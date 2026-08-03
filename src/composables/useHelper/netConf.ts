@@ -28,6 +28,7 @@ export interface NotificationNotification {
   data: Partial<Toast> & {
     url?: string
     duration?: number
+    [key: string]: any
   }
 }
 const netNotificationMap = new Map<string, boolean>()
@@ -47,6 +48,9 @@ async function netNotification(
   if (item.type === 'notification') {
     void toast.add({
       ...item.data,
+      type: 'foreground',
+      color: item.data.type as AlertProps['color'],
+      description: item.data.description ?? item.data.message ?? '',
       duration: 0,
       'onUpdate:open': () => {
         void counter.storageSet(
@@ -55,7 +59,9 @@ async function netNotification(
         )
       },
       onClick() {
-        item.data.url ?? window.open(item.data.url)
+        if (item.data.url) {
+          window.open(item.data.url)
+        }
       },
     })
   }

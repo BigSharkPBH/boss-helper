@@ -37,8 +37,9 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
     clear: () => void
     value: Log[]
   }
-
+  pendingMessages: Ref<string | undefined>
   constructor() {
+    this.pendingMessages = ref()
     this.conf = useConf()
     this.models = useModel()
     this.statistics = useStatistics()

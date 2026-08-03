@@ -87,7 +87,7 @@ const configItems = helper.getConfigItems()
       </UForm>
       <div class="flex flex-row *:flex *:flex-row justify-between *:gap-3 mt-3">
         <div>
-          <UButton color="success" data-help="保存配置，会自动刷新页面。" @click="conf.confSaving">
+          <UButton color="success" data-help="保存配置" @click="conf.confSaving">
             保存配置
           </UButton>
           <UButton color="warning" data-help="重新加载本地配置" @click="conf.confReload">
@@ -112,6 +112,7 @@ const configItems = helper.getConfigItems()
               value-key="value"
               create-item
               @create="conf.createPreset"
+              @update:model-value="(v) => conf.switchPreset(v)"
             />
           </UFormField>
           <UButton

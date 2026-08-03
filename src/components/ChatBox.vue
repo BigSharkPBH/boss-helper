@@ -267,7 +267,7 @@ onUnmounted(() => {
       </UChatMessages>
     </template>
     <template #footer>
-      <UChatPrompt variant="soft">
+      <UChatPrompt variant="soft" v-model="helper.pendingMessages.value">
         <UChatPromptSubmit v-if="messages" :status="messages.statusRef.value" />
       </UChatPrompt>
     </template>
