@@ -30,7 +30,7 @@
     "@vueuse/integrations": "^14.2.1",
     "ai": "^7.0.31",
     "codejar": "^4.3.0",
-    "comctx": "^1.6.1",
+    "comctx": "^1.7.5",
     "idb": "^8.0.3",
     "mqtt": "^5.15.1",
     "partial-json": "^0.1.7",

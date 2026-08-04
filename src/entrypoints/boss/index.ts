@@ -7,7 +7,7 @@ import { HelperContext, JobData } from '@/composables/useHelper'
 import { AlertItem, ConfigAccordionItem } from '@/composables/useHelper/type'
 import { getRootVue, useHookVueData, useHookVueFn } from '@/composables/useVue'
 import { run } from '@/index'
-import { counter } from '@/message'
+import { counter, initCounter } from '@/message'
 import { FormDataInput } from '@/types/formData'
 import elmGetter from '@/utils/elmGetter'
 import { logger } from '@/utils/logger'
@@ -697,6 +697,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
 export default defineUnlistedScript(async () => {
   // hookChatSocket()
 
+  initCounter()
   const bossHelpCtx = await BossHelperCtx.new()
 
   bossHelpCtx.rootVue.$router.afterHooks.push(

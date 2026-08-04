@@ -1,15 +1,8 @@
-import type { Adapter, Message, OnMessage, SendMessage } from 'comctx'
-import { defineProxy } from 'comctx'
-
 import type { StorageItemKey } from '#imports'
-import { browser, storage } from '#imports'
+import { storage } from '#imports'
 
 import type { BackgroundCounter } from './background'
 export { ProvideContentAdapter } from './contentScriptShare'
-
-export const [, injectBackgroundCounter] = defineProxy(() => ({}) as BackgroundCounter, {
-  namespace: '__boss-helper-background__',
-})
 
 function genKey(key: string): StorageItemKey {
   const prefixes = ['local:', 'session:', 'sync:', 'managed:'] as const
@@ -84,31 +77,3 @@ export class ContentCounter implements BackgroundCounter {
     return Date.now()
   }
 }
-
-interface MessageMeta {
-  url: string
-}
-
-export class InjectBackgroundAdapter implements Adapter<MessageMeta> {
-  sendMessage: SendMessage<MessageMeta> = async (message) => {
-    return browser.runtime.sendMessage(browser.runtime.id, {
-      ...message,
-      meta: { url: document.location.href },
-    })
-  }
-
-  onMessage: OnMessage<MessageMeta> = (callback) => {
-    const handler = (message?: Partial<Message<MessageMeta>>) => {
-      callback(message)
-    }
-    browser.runtime.onMessage.addListener(handler)
-    return () => browser.runtime.onMessage.removeListener(handler)
-  }
-}
-
-export const [provideContentCounter] = defineProxy(
-  () => new ContentCounter(injectBackgroundCounter(new InjectBackgroundAdapter())),
-  {
-    namespace: '__boss-helper-content__',
-  },
-)
