@@ -1,10 +1,9 @@
-import { counter } from '@/message'
 import { renderTemplate } from '@/utils/ai'
 import { HelperContext } from '~/composables/useHelper'
 
 import { sameCompanyKey, sameHrKey } from '../../entrypoints/boss/requests'
 import { defineTaskHandler, JobStatus, TaskContext, TaskResult } from './type'
-import { parseFiltering, rangeMatch, rangeMatchFormat } from './utils'
+import { loadSet, parseFiltering, rangeMatch, rangeMatchFormat, saveSet } from './utils'
 
 export class DependencyMissingError extends Error {
   constructor(public taskId: string) {
@@ -78,29 +77,25 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
       if (!ctx.helper.conf.formData.sameCompanyFilter.value) {
         return
       }
-      const someSet: Set<string> = new Set<string>()
-      const data = await counter.storageGet<Record<string, string[]>>(sameCompanyKey, {})
-      for (const id of data[ctx.helper.uid] ?? []) {
-        someSet.add(id)
-      }
+      const someSet = await loadSet(sameCompanyKey, ctx.helper.uid)
       return {
         fn: async (_, { jobData: data }) => {
           if (someSet.has(data.key)) {
+            ctx.helper.statistics.todayData.value.repeat++
             return taskResult.skip('相同公司已投递')
           }
         },
         after: [
           async (ctx, { jobData: data }) => {
-            someSet.add(data.key)
-            if (someSet.size % 3 === 0) {
-              const oldData = await counter.storageGet<Record<string, string[]>>(sameCompanyKey, {})
-              await counter.storageSet(sameCompanyKey, {
-                ...oldData,
-                [ctx.helper.uid]: Array.from(someSet ?? []),
-              })
+            someSet.set(data.key, Date.now())
+            if (ctx.index % 3 === 0) {
+              await saveSet(sameCompanyKey, ctx.helper.uid, someSet)
             }
           },
         ],
+        onEnd: async (ctx) => {
+          await saveSet(sameCompanyKey, ctx.helper.uid, someSet)
+        },
       }
     },
     { label: '相同公司' },
@@ -112,30 +107,25 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
       if (!ctx.helper.conf.formData.sameHrFilter.value) {
         return
       }
-      const someSet: Set<string> | null = new Set<string>()
-      const data = await counter.storageGet<Record<string, string[]>>(sameHrKey, {})
-      for (const id of data[ctx.helper.uid] ?? []) {
-        someSet.add(id)
-      }
-
+      const someSet = await loadSet(sameHrKey, ctx.helper.uid)
       return {
         fn: async (_, { jobData: data }) => {
           if (data.key != null && someSet.has(data.key)) {
+            ctx.helper.statistics.todayData.value.repeat++
             return taskResult.skip('相同hr已投递')
           }
         },
         after: [
           async (ctx, { jobData: data }) => {
-            someSet.add(data.key)
-            if (someSet.size % 3 === 0) {
-              const oldData = await counter.storageGet<Record<string, string[]>>(sameHrKey, {})
-              await counter.storageSet(sameHrKey, {
-                ...oldData,
-                [ctx.helper.uid]: Array.from(someSet ?? []),
-              })
+            someSet.set(data.key, Date.now())
+            if (ctx.index % 3 === 0) {
+              await saveSet(sameHrKey, ctx.helper.uid, someSet)
             }
           },
         ],
+        onEnd: async (ctx) => {
+          await saveSet(sameHrKey, ctx.helper.uid, someSet)
+        },
       }
     },
     { label: '相同HR' },
@@ -374,20 +364,22 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
     return async (_, { jobData }) => {
       const activeText = jobData.activeTimeStr
       const activeTime = jobData.activeTime
-      // TODO: 暂时先用文本匹配吧, activeTime 备用(没确认是否准确)
+
       if (!activeText && !activeTime) {
+        ctx.helper.statistics.todayData.value.activityFilter++
         return taskResult.skip(`无活跃内容,如果全失败请反馈`)
       } else if (!activeText && activeTime) {
         if (ctx.now.getTime() - activeTime >= 7 * 24 * 60 * 60 * 1000) {
-          return {
-            isSkip: true,
-            reason: `不活跃 [${new Date(activeTime).toLocaleString()}]`,
-          }
+          ctx.helper.statistics.todayData.value.activityFilter++
+          return taskResult.skip(`不活跃 [${new Date(activeTime).toLocaleString()}]`)
         }
       } else if (!activeText) {
+        ctx.helper.statistics.todayData.value.activityFilter++
         return taskResult.skip(`无活跃信息,如果全失败请反馈`)
-      } else if (activeText.includes('月') || activeText.includes('年'))
+      } else if (activeText.includes('月') || activeText.includes('年')) {
+        ctx.helper.statistics.todayData.value.activityFilter++
         return taskResult.skip(`不活跃, [${activeText}]`)
+      }
     }
   })
 

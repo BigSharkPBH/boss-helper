@@ -8,6 +8,7 @@ export interface Statistics {
     [key: string]: { [key: string]: number }
   }
 }
+
 const ConfigLevels = ['beginner', 'intermediate', 'advanced', 'expert'] as const
 export type ConfigLevel = (typeof ConfigLevels)[number]
 

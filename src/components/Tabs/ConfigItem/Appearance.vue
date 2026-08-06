@@ -4,10 +4,11 @@ import { watch, watchEffect } from 'vue'
 
 import Alert from '@/components/Alert.vue'
 import { useConf, appearanceConf } from '@/composables/conf'
-import { useStatistics } from '@/composables/useStatistics'
+import { useHelper } from '@/composables/useHelper'
 
 const title = useTitle(undefined, { observe: true })
-const { todayData } = useStatistics()
+const helper = useHelper()
+const { todayData } = helper.statistics
 const { formData } = useConf()
 
 watch(
@@ -39,7 +40,7 @@ watch(
       dynamicTitle?.stop()
     } else {
       dynamicTitle = watchEffect(() => {
-        title.value = `${todayData.success}/${formData.deliveryLimit.value} - 在线计算器`
+        title.value = `${todayData.value.success}/${formData.deliveryLimit.value} - 在线计算器`
       })
     }
   },

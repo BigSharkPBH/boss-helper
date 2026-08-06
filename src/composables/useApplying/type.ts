@@ -13,6 +13,7 @@ export type Task<C extends HelperContext<C, T, S>, T, S> = {
   desc?: string
   state?: JobStatus
   stateMsg?: string
+  onEnd?: (ctx: TaskContext<C, T, S>) => void | Promise<void>
 }
 
 export type TaskPipeline<C extends HelperContext<C, T, S>, T, S> = Array<Task<C, T, S>>
@@ -20,6 +21,7 @@ export type TaskPipeline<C extends HelperContext<C, T, S>, T, S> = Array<Task<C,
 export type TaskContext<C extends HelperContext<C, T, S>, T = any, S = any> = {
   now: Date
   helper: C
+  index: number
 }
 
 export const jobStatusList = [
@@ -67,13 +69,17 @@ export type Handler<C extends HelperContext<C, T, S>, T, S> = (
 export type TaskHandler<C extends HelperContext<C, T, S>, T, S> =
   | ((ctx: TaskContext<C, T, S>) => Promise<Handler<C, T, S> | void>)
   | ((ctx: TaskContext<C, T, S>) => Handler<C, T, S> | void)
-  | ((
-      ctx: TaskContext<C, T, S>,
-    ) => { fn: Handler<C, T, S>; before?: Handler<C, T, S>[]; after?: Handler<C, T, S>[] } | void)
+  | ((ctx: TaskContext<C, T, S>) => {
+      fn: Handler<C, T, S>
+      before?: Handler<C, T, S>[]
+      after?: Handler<C, T, S>[]
+      onEnd?: (ctx: TaskContext<C, T, S>) => void | Promise<void>
+    } | void)
   | ((ctx: TaskContext<C, T, S>) => Promise<{
       fn: Handler<C, T, S>
       before?: Handler<C, T, S>[]
       after?: Handler<C, T, S>[]
+      onEnd?: (ctx: TaskContext<C, T, S>) => void | Promise<void>
     } | void>)
 
 export function defineTaskHandler<C extends HelperContext<C, T, S>, T, S>(
@@ -87,6 +93,7 @@ export function defineTaskHandler<C extends HelperContext<C, T, S>, T, S>(
     desc?: string
     state?: JobStatus
     stateMsg?: string
+    onEnd?: (ctx: TaskContext<C, T, S>) => void | Promise<void>
   },
 ): (options?: {
   task?: TaskHandler<C, T, S>
@@ -97,6 +104,7 @@ export function defineTaskHandler<C extends HelperContext<C, T, S>, T, S>(
   desc?: string
   state?: JobStatus
   stateMsg?: string
+  onEnd?: (ctx: TaskContext<C, T, S>) => void | Promise<void>
 }) => Task<C, T, S> {
   return (options) => {
     const {
@@ -108,6 +116,7 @@ export function defineTaskHandler<C extends HelperContext<C, T, S>, T, S>(
       desc: s = opt?.desc,
       state: st = opt?.state,
       stateMsg: sm = opt?.stateMsg,
+      onEnd: oe = opt?.onEnd,
     } = options || {}
     return {
       id,
@@ -119,6 +128,7 @@ export function defineTaskHandler<C extends HelperContext<C, T, S>, T, S>(
       desc: s,
       state: st,
       stateMsg: sm,
+      onEnd: oe,
     }
   }
 }

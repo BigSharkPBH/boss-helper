@@ -111,7 +111,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
   const resolvedHandlers = new Map<string, Handler<C, T, S>>()
 
   const rebuild = async () => {
-    const _ctx: TaskContext<C, T, S> = { helper, now: new Date() }
+    const _ctx: TaskContext<C, T, S> = { helper, now: new Date(), index: 0 }
     const taskMap = new Map<string, Task<C, T, S>>()
     const _resolvedHandlers = new Map<string, any>()
     const errors = new Map<string, any>()
@@ -179,7 +179,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     })
   }
 
-  const executeTask = async (task: Task<C, T, S>, data: WorkflowData<T, S>) => {
+  const executeTask = async (task: Task<C, T, S>, data: WorkflowData<T, S>, index: number) => {
     let res: TaskResult | void = undefined
     const isStop = () => status.value === 'stop'
     const handler = resolvedHandlers.get(task.id)
@@ -193,6 +193,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
             {
               helper,
               now: new Date(),
+              index,
             },
             data,
           ),
@@ -206,6 +207,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
               {
                 helper,
                 now: new Date(),
+                index,
               },
               data,
             )
@@ -214,6 +216,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
                 {
                   helper,
                   now: new Date(),
+                  index,
                 },
                 data,
               ),
@@ -228,8 +231,9 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     return res
   }
 
-  const execute = async (data: WorkflowData<T, S>) => {
+  const execute = async (data: WorkflowData<T, S>, index = 0) => {
     const isStop = () => status.value === 'stop'
+    helper.statistics.todayData.value.total++
     try {
       let skipPipeline = false
       for (const t of pipeline.value) {
@@ -240,7 +244,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
             status: t.state || 'running',
             msg: t.stateMsg || '运行中',
           })
-          res = await executeTask(t, data)
+          res = await executeTask(t, data, index)
           if (res != null) {
             res.msg ??= t.label ?? t.id
             res.status ??= res.isSkip ? 'warn' : undefined
@@ -267,9 +271,9 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
               ...res,
             })
             if (res.status) {
-              helper.statistics.todayData.tasks[t.id] ??= {}
-              helper.statistics.todayData.tasks[t.id][res.status] ??= 0
-              helper.statistics.todayData.tasks[t.id][res.status] += 1
+              helper.statistics.todayData.value.tasks[t.id] ??= {}
+              helper.statistics.todayData.value.tasks[t.id][res.status] ??= 0
+              helper.statistics.todayData.value.tasks[t.id][res.status] += 1
             }
           }
         }
@@ -279,6 +283,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           status: 'success',
           msg: '投递成功',
         })
+        helper.statistics.todayData.value.success++
       }
     } catch (e) {
       status.value = 'error'
@@ -329,7 +334,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           }
           helper.jobMaps.set(jobData.key, data)
           helper.currentJob.value = jobData.key
-          await execute(data)
+          await execute(data, index)
           await delay(helper.conf.formData.delayDeliveryInterval, isStop)
         }
         if (isStop()) break
@@ -354,6 +359,15 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         errorMessage.value = stepMsg
       }
       helper.notification(stepMsg)
+
+      const now = new Date()
+      for (const t of pipeline.value) {
+        try {
+          await t.onEnd?.({ now, helper, index: 0 })
+        } catch (e) {
+          logger.error('onEnd error', t.id, e)
+        }
+      }
     }
   }
 

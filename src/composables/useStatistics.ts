@@ -1,4 +1,4 @@
-import { reactiveComputed, watchThrottled } from '@vueuse/core'
+import { watchThrottled } from '@vueuse/core'
 
 import { ref } from '#imports'
 import { counter } from '@/message'
@@ -13,32 +13,16 @@ export const statisticsKey = 'local:web-geek-job-Statistics'
 export const useStatistics = () => {
   const date = getCurDay()
 
-  const todayData = reactiveComputed<Statistics>(() => {
-    const current = {
-      date,
-      success: 0,
-      total: 0,
-      repeat: 0,
-      activityFilter: 0,
-      tasks: {},
-    }
-    return current
+  const todayData = ref<Statistics>({
+    date,
+    success: 0,
+    total: 0,
+    repeat: 0,
+    activityFilter: 0,
+    tasks: {},
   })
 
   const statisticsData = ref<Statistics[]>([])
-
-  async function getStatistics(): Promise<string> {
-    await updateStatistics()
-    return JSON.stringify(jsonClone({ t: todayData, s: statisticsData.value }))
-  }
-
-  async function setStatistics(data: string) {
-    const { t, s } = JSON.parse(data)
-    deepmerge(todayData, t, { clone: false })
-    statisticsData.value = s
-    await counter.storageSet(todayKey, t)
-    await counter.storageSet(statisticsKey, s)
-  }
 
   watchThrottled(
     todayData,
@@ -48,7 +32,7 @@ export const useStatistics = () => {
     { throttle: 200 },
   )
 
-  async function updateStatistics(curData = jsonClone(todayData)) {
+  async function updateStatistics(curData = jsonClone(todayData.value)) {
     void counter.storageGet<Statistics[]>(statisticsKey, []).then((data) => {
       statisticsData.value = data
     })
@@ -72,7 +56,5 @@ export const useStatistics = () => {
     todayData,
     statisticsData,
     updateStatistics,
-    getStatistics,
-    setStatistics,
   }
 }
