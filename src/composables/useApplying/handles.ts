@@ -38,22 +38,17 @@ function amapHandler<C extends HelperContext<C, T, S>, T, S>(
   amap?: { ok: boolean; distance: number; duration: number },
 ): TaskResult | void {
   if (!amap || amap.ok === false) {
-    return {
-      isSkip: true,
-      reason: '高德地图未初始化',
-    }
+    return taskResult.skip('高德地图未初始化')
   }
   if (distance > 0 && amap.distance > distance * 1000) {
-    return {
-      isSkip: true,
-      reason: `${id}距离超标: ${amap.distance / 1000} 设定: ${ctx.helper.conf.formData.amap.straightDistance}`,
-    }
+    return taskResult.skip(
+      `${id}距离超标: ${amap.distance / 1000} 设定: ${ctx.helper.conf.formData.amap.straightDistance}`,
+    )
   }
   if (duration > 0 && amap.duration > duration * 60) {
-    return {
-      isSkip: true,
-      reason: `${id}时间超标: ${amap.duration / 60} 设定: ${ctx.helper.conf.formData.amap.drivingDuration}`,
-    }
+    return taskResult.skip(
+      `${id}时间超标: ${amap.duration / 60} 设定: ${ctx.helper.conf.formData.amap.drivingDuration}`,
+    )
   }
 }
 
@@ -143,10 +138,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
           if (ctx.helper.conf.formData.jobTitle.include) {
             return
           }
-          return {
-            isSkip: true,
-            reason: `岗位名含有排除关键词 [${x}]`,
-          }
+          return taskResult.skip(`岗位名含有排除关键词 [${x}]`)
         }
       }
       if (ctx.helper.conf.formData.jobTitle.include) {
@@ -161,10 +153,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
     }
     return async (_ctx, { jobData: data }) => {
       if (data?.boss.isHeadhunter === true) {
-        return {
-          isSkip: true,
-          reason: '猎头过滤',
-        }
+        return taskResult.skip('猎头过滤')
       }
     }
   })
@@ -183,10 +172,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
           if (ctx.helper.conf.formData.company.include) {
             return
           }
-          return {
-            isSkip: true,
-            reason: `公司名含有排除关键词 [${x}]`,
-          }
+          return taskResult.skip(`公司名含有排除关键词 [${x}]`)
         }
       }
       if (ctx.helper.conf.formData.company.include) {
@@ -210,10 +196,9 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
       for (const key of arr) {
         if (text.includes(key[0])) {
           if (!rangeMatch(text, key[1])) {
-            return {
-              isSkip: true,
-              reason: `不匹配的薪资范围 ${text}, 预期: ${rangeMatchFormat(key[1], key[0])}`,
-            }
+            return taskResult.skip(
+              `不匹配的薪资范围 ${text}, 预期: ${rangeMatchFormat(key[1], key[0])}`,
+            )
           }
         }
       }
@@ -248,10 +233,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
           if (ctx.helper.conf.formData.jobContent.include) {
             return
           }
-          return {
-            isSkip: true,
-            reason: `工作内容含有排除关键词 [${x}]`,
-          }
+          return taskResult.skip(`工作内容含有排除关键词 [${x}]`)
         }
       }
       if (ctx.helper.conf.formData.jobContent.include) {
@@ -274,10 +256,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
           if (ctx.helper.conf.formData.hrPosition.include) {
             return
           }
-          return {
-            isSkip: true,
-            reason: `Hr职位在黑名单中 ${content}`,
-          }
+          return taskResult.skip(`Hr职位在黑名单中: ${content}`)
         }
       }
       if (ctx.helper.conf.formData.hrPosition.include) {
@@ -303,16 +282,10 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
           if (ctx.helper.conf.formData.jobAddress.include) {
             return
           }
-          return {
-            isSkip: true,
-            reason: `工作地址含有排除关键词 [${x}]`,
-          }
+          return taskResult.skip(`工作地址含有排除关键词 [${x}]`)
         }
       }
-      return {
-        isSkip: true,
-        reason: `工作地址不包含关键词: ${content}`,
-      }
+      return taskResult.skip(`工作地址不包含关键词: ${content}`)
     }
   })
 
@@ -322,10 +295,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
     }
     return async (_, { jobData }) => {
       if (jobData.boss?.isFriend === true) {
-        return {
-          isSkip: true,
-          reason: '已经是好友了',
-        }
+        return taskResult.skip('已经是好友了')
       }
     }
   })
@@ -464,10 +434,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
       state.amap.distance = await amapDistance(state.amap.geocode.location)
 
       if (state.amap == null || state.amap.distance == null) {
-        return {
-          isSkip: true,
-          reason: 'api数据异常',
-        }
+        return taskResult.skip('api数据异常')
       }
       return [
         amapHandler(

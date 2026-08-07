@@ -1,3 +1,5 @@
+import { resolve } from 'path'
+
 import ui from '@nuxt/ui/vite'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import tailwindShadowDOM from 'vite-plugin-tailwind-shadowdom'
@@ -14,6 +16,11 @@ export default defineConfig({
   // imports: false,
 
   vite: () => ({
+    resolve: {
+      alias: {
+        'devlog-ui': resolve(__dirname, 'packages/devlog-ui/src'),
+      },
+    },
     define: {
       __APP_VERSION__: JSON.stringify(version),
     },

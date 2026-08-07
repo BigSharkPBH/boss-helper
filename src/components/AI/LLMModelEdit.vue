@@ -98,7 +98,7 @@ async function test() {
 
   const model = openai.createModel(data.data)
 
-  logger.group('LLMTest')
+  const span = logger.span('LLMTest')
   try {
     const result = streamText({
       model: model,
@@ -106,7 +106,7 @@ async function test() {
     })
     testOut.value = ''
     for await (const part of result.fullStream) {
-      logger.debug('TestResStream', part)
+      span.info('TestResStream', part)
       if (part.type === 'reasoning-start') {
         testOut.value += '<思考过程>'
       } else if (part.type === 'reasoning-end') {
@@ -122,7 +122,7 @@ async function test() {
     })
   }
 
-  logger.groupEnd()
+  span.end()
 }
 
 function create() {

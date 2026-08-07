@@ -1,3 +1,5 @@
+import { ContextLogger } from 'devlog-ui'
+
 import { HelperContext, JobData } from '@/composables/useHelper'
 
 import { DeliveryWorkflow, useDeliveryWorkflow } from '.'
@@ -22,6 +24,7 @@ export type TaskContext<C extends HelperContext<C, T, S>, T = any, S = any> = {
   now: Date
   helper: C
   index: number
+  log: ContextLogger
 }
 
 export const jobStatusList = [

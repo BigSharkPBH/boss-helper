@@ -222,7 +222,7 @@ async function testJob() {
           content: content[0],
         })
       } catch (err: any) {
-        logger.error(err)
+        logger.error('TestJobError', err)
         toast.add({
           title: err.message,
           color: 'error',
@@ -237,7 +237,7 @@ async function testJob() {
       await Promise.all(batch.map(handle))
     }
   } catch (err: any) {
-    logger.error(err)
+    logger.error('TestJobError', err)
     toast.add({
       title: err.message,
       color: 'error',

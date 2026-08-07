@@ -4,6 +4,9 @@
   "version": "0.5.1",
   "private": true,
   "description": "Boss直聘助手, 皆在减少投递简历的麻烦, 和提高投递简历的效率,技术栈使用VIte + Vue3 + element-plus",
+  "workspaces": [
+    "packages/*"
+  ],
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -31,6 +34,7 @@
     "ai": "^7.0.31",
     "codejar": "^4.3.0",
     "comctx": "^1.7.5",
+    "devlog-ui": "workspace:*",
     "idb": "^8.0.3",
     "mqtt": "^5.15.1",
     "partial-json": "^0.1.7",

@@ -1,3 +1,4 @@
+import { ContextLogger } from 'devlog-ui'
 import { shallowRef, ref } from 'vue'
 
 import { PipelineCacheManager } from '@/composables/usePipelineCache'
@@ -111,7 +112,12 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
   const resolvedHandlers = new Map<string, Handler<C, T, S>>()
 
   const rebuild = async () => {
-    const _ctx: TaskContext<C, T, S> = { helper, now: new Date(), index: 0 }
+    const _ctx: TaskContext<C, T, S> = {
+      helper,
+      now: new Date(),
+      index: 0,
+      log: logger.withContext({ id: 'workflow-rebuild' }),
+    }
     const taskMap = new Map<string, Task<C, T, S>>()
     const _resolvedHandlers = new Map<string, any>()
     const errors = new Map<string, any>()
@@ -177,15 +183,23 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         error,
       }
     })
+    logger.debug('Pipeline rebuilt', JSON.parse(JSON.stringify(pipeline.value)))
   }
 
-  const executeTask = async (task: Task<C, T, S>, data: WorkflowData<T, S>, index: number) => {
+  const executeTask = async (
+    task: Task<C, T, S>,
+    data: WorkflowData<T, S>,
+    index: number,
+    log: ContextLogger,
+  ) => {
     let res: TaskResult | void = undefined
     const isStop = () => status.value === 'stop'
     const handler = resolvedHandlers.get(task.id)
     if (!handler || isStop()) return
 
     const fns = [...task.before, handler, ...task.after]
+    log = log.withContext({ task_id: task.id })
+
     for (const fn of fns) {
       try {
         res = meginResults(
@@ -194,6 +208,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
               helper,
               now: new Date(),
               index,
+              log,
             },
             data,
           ),
@@ -208,6 +223,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
                 helper,
                 now: new Date(),
                 index,
+                log,
               },
               data,
             )
@@ -217,6 +233,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
                   helper,
                   now: new Date(),
                   index,
+                  log,
                 },
                 data,
               ),
@@ -234,8 +251,14 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
   const execute = async (data: WorkflowData<T, S>, index = 0) => {
     const isStop = () => status.value === 'stop'
     helper.statistics.todayData.value.total++
+    const log = logger.withContext({
+      id: 'workflow-execute',
+      job_key: data.jobData.key,
+      job_name: data.jobData.jobName,
+    })
     try {
       let skipPipeline = false
+      let errorLog = false
       for (const t of pipeline.value) {
         let res: void | TaskResult = undefined
         try {
@@ -244,7 +267,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
             status: t.state || 'running',
             msg: t.stateMsg || '运行中',
           })
-          res = await executeTask(t, data, index)
+          res = await executeTask(t, data, index, log)
           if (res != null) {
             res.msg ??= t.label ?? t.id
             res.status ??= res.isSkip ? 'warn' : undefined
@@ -261,8 +284,9 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
             reason: `任务${t.label ?? t.id}执行失败: ${e instanceof Error ? e.message : e}`,
             msg: `报错/${t.label ?? t.id}`,
           }
-          logger.error(`任务${t.label ?? t.id}执行失败`, e)
+          log.error(`任务${t.label ?? t.id}执行失败`, e)
           skipPipeline = true
+          errorLog = true
           break
         } finally {
           if (res != null) {
@@ -284,6 +308,9 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           msg: '投递成功',
         })
         helper.statistics.todayData.value.success++
+      } else if (!errorLog) {
+        const r = helper.jobResultMaps.get(data.jobData.key)
+        log.warn(`投递过滤: ${data.jobData.jobName}`, r?.msg, r?.reason)
       }
     } catch (e) {
       status.value = 'error'
@@ -348,7 +375,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         }
       }
     } catch (e) {
-      logger.error(e)
+      logger.error('投递未知错误', e)
       stepMsg = `未知错误: ${e}`
     } finally {
       if (!stepMsg) {
@@ -363,7 +390,12 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
       const now = new Date()
       for (const t of pipeline.value) {
         try {
-          await t.onEnd?.({ now, helper, index: 0 })
+          await t.onEnd?.({
+            now,
+            helper,
+            index: 0,
+            log: logger.withContext({ id: 'workflow-end' }),
+          })
         } catch (e) {
           logger.error('onEnd error', t.id, e)
         }
