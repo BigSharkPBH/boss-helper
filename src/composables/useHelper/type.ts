@@ -133,12 +133,20 @@ export type ConfigItem =
       type:
         | 'select'
         | 'checkbox'
-        | ('salaryRange' | 'companySizeRange' | 'customGreeting' | 'address' | 'appearance')
+        | (
+            | 'salaryRange'
+            | 'companySizeRange'
+            | 'customGreeting'
+            | 'address'
+            | 'appearance'
+            | 'checkbox-expire'
+          )
     }
   | AlertItem
   | {
       type: 'div'
       items?: (ConfigItem | false)[]
+
       [key: string]: any
     }
   | {

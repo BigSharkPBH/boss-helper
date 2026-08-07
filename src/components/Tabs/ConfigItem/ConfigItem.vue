@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { DropdownMenuItem } from '@nuxt/ui'
+
 import { formInfoData, useConf } from '@/composables/conf'
 import { useHelper } from '@/composables/useHelper/index.js'
 import { type ConfigItem } from '@/composables/useHelper/type'
@@ -15,6 +17,38 @@ const props = defineProps<{
 
 const helper = useHelper()
 const conf = useConf()
+
+const exp = computed(() => {
+  if (
+    !props.item ||
+    props.item.type !== 'checkbox-expire' ||
+    !('key' in props.item) ||
+    !conf.formData[props.item.key]
+  ) {
+    return []
+  }
+  return [
+    { label: '不限', value: 0 },
+    { label: '7天', value: 7 * 24 * 60 * 60 * 1000 },
+    { label: '30天', value: 30 * 24 * 60 * 60 * 1000 },
+    { label: '90天', value: 90 * 24 * 60 * 60 * 1000 },
+    { label: '180天', value: 180 * 24 * 60 * 60 * 1000 },
+    { label: '360天', value: 360 * 24 * 60 * 60 * 1000 },
+  ].map(
+    (menu) =>
+      ({
+        ...menu,
+        value: menu.value,
+        type: 'checkbox',
+        checked: conf.formData[(props.item as { key: string }).key].expire === menu.value,
+        onUpdateChecked: (checked: boolean) => {
+          if (checked) {
+            conf.formData[(props.item as { key: string }).key].expire = menu.value
+          }
+        },
+      }) satisfies DropdownMenuItem,
+  )
+})
 </script>
 
 <template>
@@ -60,6 +94,23 @@ const conf = useConf()
     :title="formInfoData[item.key]['data-help']"
   >
     <UCheckbox v-model="conf.formData[item.key].value" :label="formInfoData[item.key]['label']" />
+  </span>
+  <span
+    v-else-if="item.type === 'checkbox-expire'"
+    v-bind="formInfoData[item.key]"
+    :title="formInfoData[item.key]['data-help']"
+    class="flex flex-row gap-0.5 justify-center items-center"
+  >
+    <UCheckbox v-model="conf.formData[item.key].value" :label="formInfoData[item.key]['label']" />
+    <UDropdownMenu v-model="conf.formData[item.key].expire" :items="exp" value-key="value">
+      <UButton
+        icon="i-lucide-clock-fading"
+        color="neutral"
+        variant="outline"
+        title="过期时间"
+        size="xs"
+      />
+    </UDropdownMenu>
   </span>
 
   <div v-else-if="item.type === 'div'" v-bind="item">

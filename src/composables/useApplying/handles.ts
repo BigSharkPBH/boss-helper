@@ -84,12 +84,22 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
           async (ctx, { jobData: data }) => {
             someSet.set(data.key, Date.now())
             if (ctx.index % 3 === 0) {
-              await saveSet(sameCompanyKey, ctx.helper.uid, someSet)
+              await saveSet(
+                sameCompanyKey,
+                ctx.helper.uid,
+                someSet,
+                ctx.helper.conf.formData.sameCompanyFilter.expire,
+              )
             }
           },
         ],
         onEnd: async (ctx) => {
-          await saveSet(sameCompanyKey, ctx.helper.uid, someSet)
+          await saveSet(
+            sameCompanyKey,
+            ctx.helper.uid,
+            someSet,
+            ctx.helper.conf.formData.sameCompanyFilter.expire,
+          )
         },
       }
     },
@@ -114,12 +124,22 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
           async (ctx, { jobData: data }) => {
             someSet.set(data.key, Date.now())
             if (ctx.index % 3 === 0) {
-              await saveSet(sameHrKey, ctx.helper.uid, someSet)
+              await saveSet(
+                sameHrKey,
+                ctx.helper.uid,
+                someSet,
+                ctx.helper.conf.formData.sameHrFilter.expire,
+              )
             }
           },
         ],
         onEnd: async (ctx) => {
-          await saveSet(sameHrKey, ctx.helper.uid, someSet)
+          await saveSet(
+            sameHrKey,
+            ctx.helper.uid,
+            someSet,
+            ctx.helper.conf.formData.sameHrFilter.expire,
+          )
         },
       }
     },

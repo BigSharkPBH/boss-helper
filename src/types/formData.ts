@@ -27,8 +27,8 @@ export interface FormData {
   activityFilter: FormDataCheckbox
   friendStatus: FormDataCheckbox
   bossGoldMedalHr: FormDataCheckbox
-  sameCompanyFilter: FormDataCheckbox
-  sameHrFilter: FormDataCheckbox
+  sameCompanyFilter: FormDataCheckbox & { expire?: number }
+  sameHrFilter: FormDataCheckbox & { expire?: number }
   goldHunterFilter: FormDataCheckbox
   notification: FormDataCheckbox
   useCache: FormDataCheckbox

@@ -92,7 +92,7 @@ interface UserInfo {
 }
 
 async function test() {
-  const data: ModelConf = JSON.parse(JSON.stringify(props.model || { name: '', key: '' }))
+  const data: ModelConf = jsonClone(props.model || { name: '', key: '' })
   data.name = createName.value
   data.data = jsonClone(llmFormData) as ModelConf['data'] & {}
 

@@ -183,7 +183,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         error,
       }
     })
-    logger.debug('Pipeline rebuilt', JSON.parse(JSON.stringify(pipeline.value)))
+    logger.debug('Pipeline rebuilt', jsonClone(pipeline.value))
   }
 
   const executeTask = async (

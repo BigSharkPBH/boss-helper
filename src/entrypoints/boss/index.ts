@@ -407,11 +407,11 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
                     key: 'bossGoldMedalHr',
                   },
                   conf.configLevel.intermediate && {
-                    type: 'checkbox',
+                    type: 'checkbox-expire',
                     key: 'sameCompanyFilter',
                   },
                   conf.configLevel.intermediate && {
-                    type: 'checkbox',
+                    type: 'checkbox-expire',
                     key: 'sameHrFilter',
                   },
                 ],

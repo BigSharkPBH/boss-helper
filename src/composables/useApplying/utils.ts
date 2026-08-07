@@ -80,19 +80,15 @@ export async function loadSet(key: string, uid: string): Promise<Map<string, num
   return map
 }
 
-export async function saveSet(
-  key: string,
-  uid: string,
-  map: Map<string, number>,
-  EXPIRE = 7 * 24 * 60 * 60 * 1000,
-) {
+export async function saveSet(key: string, uid: string, map: Map<string, number>, EXPIRE = 0) {
   const now = Date.now()
   const expire = now - EXPIRE
-
-  // GC
-  for (const [id, time] of map) {
-    if (time < expire) {
-      map.delete(id)
+  if (EXPIRE > 0) {
+    // GC
+    for (const [id, time] of map) {
+      if (time < expire) {
+        map.delete(id)
+      }
     }
   }
 

@@ -77,23 +77,21 @@ onMounted(() => {
       <div data-help="统计当天岗位过滤的比例,被过滤/总数">
         <div class="text-sm text-gray-500">过滤比例：</div>
         <div class="text-2xl font-semibold">
-          {{
-            (((todayData.total - todayData.success) / todayData.total) * deliveryLimit).toFixed(1)
-          }}
+          {{ (((todayData.total - todayData.success) / todayData.total) * 100).toFixed(0) }}
           <span class="text-sm text-gray-400">%</span>
         </div>
       </div>
       <div data-help="统计当天刷到了多少处理过的岗位,重复/总数">
         <div class="text-sm text-gray-500">重复比例：</div>
         <div class="text-2xl font-semibold">
-          {{ ((todayData.repeat / todayData.total) * deliveryLimit).toFixed(1) }}
+          {{ ((todayData.repeat / todayData.total) * 100).toFixed(0) }}
           <span class="text-sm text-gray-400">%</span>
         </div>
       </div>
       <div data-help="统计当天岗位中的活跃情况,不活跃/总数">
         <div class="text-sm text-gray-500">活跃比例：</div>
         <div class="text-2xl font-semibold">
-          {{ ((todayData.activityFilter / todayData.total) * deliveryLimit).toFixed(1) }}
+          {{ ((todayData.activityFilter / todayData.total) * 100).toFixed(0) }}
           <span class="text-sm text-gray-400">%</span>
         </div>
       </div>

@@ -29,7 +29,7 @@ export const useStatistics = () => {
     (v) => {
       void counter.storageSet(todayKey, jsonClone(v))
     },
-    { throttle: 200 },
+    { throttle: 200, deep: true },
   )
 
   async function updateStatistics(curData = jsonClone(todayData.value)) {
@@ -40,8 +40,8 @@ export const useStatistics = () => {
     const g = await counter.storageGet(todayKey, curData)
     logger.debug('统计数据:', date, g)
     if (g.date === date) {
-      deepmerge(todayData, g, { clone: false })
-      return g
+      todayData.value = deepmerge(curData, g, { clone: false })
+      return
     }
 
     const statistics = await counter.storageGet(statisticsKey, [])
