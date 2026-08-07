@@ -215,7 +215,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
   }
 
   async sendMessage(data: WorkflowData<BoosJobData, {}>, msgs: FormDataInput['value']) {
-    logger.info('发送消息', { jobKey: data.jobData.key, msg: msgs })
+    logger.debug('发送消息', { jobKey: data.jobData.key, msg: msgs })
 
     const stanza = {
       uid: Number(data.rawData.boss.data.bossId),

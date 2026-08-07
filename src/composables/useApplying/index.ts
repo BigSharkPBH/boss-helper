@@ -141,7 +141,10 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           if (result.after) task.after.push(...result.after)
         }
       } catch (e) {
-        errors.set(task.id, e)
+        errors.set(`${task.id}::${task.label}`, e)
+        _resolvedHandlers.set(task.id, async () => {
+          throw e
+        })
       }
     }
 
@@ -168,10 +171,10 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     nodes.value = rawTasks.map((t) => {
       const isLastDefinition = taskMap.get(t.id)?.task === t.task
       const isResolved = _resolvedHandlers.has(t.id)
-      const error = errors.get(t.id)
+      const error = errors.get(`${t.id}::${t.label}`)
       let nStatus: TaskStatus = 'disabled'
-      if (error) nStatus = 'failed'
-      else if (!isLastDefinition) nStatus = 'shadowed'
+      if (!isLastDefinition) nStatus = 'shadowed'
+      else if (error) nStatus = 'failed'
       else if (isResolved) nStatus = 'active'
       else if (requiredIds.has(t.id)) nStatus = 'dependency_only'
 
@@ -183,7 +186,21 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         error,
       }
     })
-    logger.debug('Pipeline rebuilt', jsonClone(pipeline.value))
+    const errMsg = nodes.value
+      .map((i) => {
+        if (i.error) {
+          return `${i.label}: ${i.error instanceof Error ? i.error.message : JSON.stringify(i.error)}`
+        }
+      })
+      .filter(Boolean)
+      .join('\n')
+    if (errMsg) {
+      logger.error('工作流构建错误, 请检查配置:', errMsg)
+      alert(`工作流构建错误, 请检查配置:\n${errMsg}`)
+      errorMessage.value = errMsg
+    } else {
+      logger.debug('Pipeline rebuilt', jsonClone(pipeline.value))
+    }
   }
 
   const executeTask = async (

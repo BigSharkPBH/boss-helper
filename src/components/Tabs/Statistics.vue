@@ -50,10 +50,6 @@ const cycle = computed(() => {
   return ans
 })
 
-const deliveryLimit = computed(() => {
-  return conf.formData.deliveryLimit.value
-})
-
 onMounted(() => {
   void helper.statistics.updateStatistics()
 })
@@ -150,7 +146,7 @@ onMounted(() => {
       <UProgress
         data-help="我会统计当天脚本投递的数量,该记录并不准确"
         class="flex-1"
-        :value="Number(((todayData.success / deliveryLimit) * 100).toFixed(1))"
+        :model-value="(todayData.success / conf.formData.deliveryLimit.value) * 100"
       />
     </div>
   </div>
