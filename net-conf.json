@@ -1,6 +1,6 @@
 {
-  "version": "0.5.1",
-  "version_description": "0.5.1: 修复招呼语无法发送的问题, UI重构, 其他小问题修复",
+  "version": "0.5.2",
+  "version_description": "0.5.2: 修复统计功能失效, 完善日志记录, 修复投递失败后继续投递的问题",
   "store": {
     "chrome": [
       "Chrome Store, 需要魔法，审核速度较慢",
