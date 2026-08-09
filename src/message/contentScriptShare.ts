@@ -1,4 +1,4 @@
-import { Adapter, SendMessage, OnMessage, Message } from 'comctx'
+import type { Adapter, SendMessage, OnMessage, Message } from 'comctx'
 
 declare global {
   function cloneInto<T>(value: T, target: any): T

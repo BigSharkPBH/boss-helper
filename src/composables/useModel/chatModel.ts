@@ -1,25 +1,23 @@
-import { createOpenAI, OpenAIProvider } from '@ai-sdk/openai'
-import { ChatMessageProps } from '@nuxt/ui'
+import type { OpenAIProvider } from '@ai-sdk/openai'
+import { createOpenAI } from '@ai-sdk/openai'
+import type { ChatMessageProps } from '@nuxt/ui'
+import type { ChatState, ChatStatus, ModelMessage, UIMessage } from 'ai'
 import {
   APICallError,
-  ChatState,
-  ChatStatus,
-  ModelMessage,
   Output,
   ToolLoopAgent,
-  UIMessage,
   createIdGenerator,
   isReasoningUIPart,
   isTextUIPart,
 } from 'ai'
-import { ShallowReactive } from 'vue'
+import type { ShallowReactive } from 'vue'
 
-import { FormDataAi } from '@/types/formData'
+import type { FormDataAi } from '@/types/formData'
 import { renderTemplate } from '@/utils/ai'
 
-import { ModelConf } from '.'
-import { WorkflowData } from '../useApplying/type'
-import { HelperContext } from '../useHelper'
+import type { ModelConf } from '.'
+import type { WorkflowData } from '../useApplying/type'
+import type { HelperContext } from '../useHelper'
 
 const role = ['system', 'user', 'assistant', 'boss', 'jd', 'filtering', 'greetings'] as const
 type MessageRole = (typeof role)[number]
@@ -156,9 +154,9 @@ export class ChatModel {
     } else {
       messages = jsonClone(model.prompt)
     }
-    for (const i in messages) {
-      if (typeof messages[i].content === 'string') {
-        messages[i].content = renderTemplate(messages[i].content, data)
+    for (const msg of messages) {
+      if (typeof msg.content === 'string') {
+        msg.content = renderTemplate(msg.content, data)
       }
     }
     let state: VueChatState<Message>
@@ -272,7 +270,7 @@ ${data.jobData.jobDescription}`,
             return err.message
           }
           logger.error('Unknown error during chat streaming', err)
-          return `Unknown error: ${err}`
+          return `Unknown error: ${err instanceof Error ? err.message : String(err)}`
         },
       })) {
         let part: (typeof msg.parts)[number] | null = null
@@ -286,7 +284,7 @@ ${data.jobData.jobDescription}`,
             }
             break
           case 'reasoning-end':
-            if (isReasoningUIPart(lastPart)) {
+            if (lastPart && isReasoningUIPart(lastPart)) {
               lastPart.state = 'done'
             }
             break
@@ -298,7 +296,7 @@ ${data.jobData.jobDescription}`,
             }
             break
           case 'text-end':
-            if (isTextUIPart(lastPart)) {
+            if (lastPart && isTextUIPart(lastPart)) {
               lastPart.state = 'done'
             }
             break

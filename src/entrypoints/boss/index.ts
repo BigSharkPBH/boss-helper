@@ -2,20 +2,23 @@ import { ref } from 'vue'
 
 import { defineUnlistedScript } from '#imports'
 import { appearanceConf, useConf } from '@/composables/conf'
-import { createLazyObject, isInitialized, WorkflowData } from '@/composables/useApplying/type'
-import { HelperContext, JobData } from '@/composables/useHelper'
-import { AlertItem, ConfigAccordionItem } from '@/composables/useHelper/type'
+import type { WorkflowData } from '@/composables/useApplying/type'
+import { createLazyObject, isInitialized } from '@/composables/useApplying/type'
+import type { JobData } from '@/composables/useHelper'
+import { HelperContext } from '@/composables/useHelper'
+import type { AlertItem, ConfigAccordionItem } from '@/composables/useHelper/type'
 import { getRootVue, useHookVueData, useHookVueFn } from '@/composables/useVue'
 import { run } from '@/index'
 import { counter, initCounter } from '@/message'
-import { FormDataInput } from '@/types/formData'
+import type { FormDataInput } from '@/types/formData'
 import elmGetter from '@/utils/elmGetter'
 import { logger } from '@/utils/logger'
 
 import { GeekChatClientManager } from './chat'
-import { BoosJobData, bossWorkflow } from './delivery'
+import type { BoosJobData } from './delivery'
+import { bossWorkflow } from './delivery'
 import { uploadImage } from './requests'
-import { BossZpDetailData, BossZpJobItemData } from './types'
+import type { BossZpDetailData, BossZpJobItemData } from './types'
 
 function removeAd() {
   // 新职位发布时通知我
@@ -520,7 +523,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
       ]
     })
   }
-  async onJobCardClick(key: string) {
+  override async onJobCardClick(key: string) {
     // const detail = await requestDetail({
     //   securityId: job.rawData.jobitem.securityId,
     //   lid: job.rawData.jobitem.encryptJobId,
@@ -569,7 +572,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
     this.jobMaps.set(key, job)
   }
   async _initJobList() {
-    useHookVueData(
+    await useHookVueData(
       '#wrap .page-job-wrapper,.job-recommend-main,.page-jobs-main',
       'jobList',
       this._jobList,
@@ -719,7 +722,7 @@ export default defineUnlistedScript(async () => {
       fullPath: string
     }) => {
       // hookChatSocket()
-      bossHelpCtx.onMount(to.path)
+      void bossHelpCtx.onMount(to.path)
     },
   )
 

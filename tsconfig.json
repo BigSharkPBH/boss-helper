@@ -4,6 +4,7 @@
     "jsx": "preserve",
     "jsxImportSource": "vue",
     "allowArbitraryExtensions": true,
+    "verbatimModuleSyntax": true,
     "paths": {
       "@": ["./src"],
       "@/*": ["./src/*"],

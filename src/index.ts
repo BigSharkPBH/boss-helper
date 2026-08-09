@@ -3,7 +3,8 @@ import { createApp } from 'vue'
 
 import App from './App.vue'
 import AppMenu from './AppMenu.vue'
-import { HelperContext, HelperKey } from './composables/useHelper'
+import type { HelperContext} from './composables/useHelper';
+import { HelperKey } from './composables/useHelper'
 
 import AppStyle from '@/assets/main.css?inline'
 

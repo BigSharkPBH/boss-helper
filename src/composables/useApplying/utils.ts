@@ -1,5 +1,5 @@
 import { counter } from '@/message'
-import { FormDataRange } from '@/types/formData'
+import type { FormDataRange } from '@/types/formData'
 import { parseGptJson } from '@/utils/ai'
 
 export function rangeMatchFormat(v: FormDataRange, unit: string): string {

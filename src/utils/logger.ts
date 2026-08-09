@@ -1,4 +1,5 @@
-import { logger, LogLevel, LogPersistence } from 'devlog-ui'
+import type { LogLevel} from 'devlog-ui';
+import { logger, LogPersistence } from 'devlog-ui'
 
 LogPersistence.enable({
   storage: 'session', // 'session' (sessionStorage) or 'local' (localStorage)

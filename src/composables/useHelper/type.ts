@@ -1,7 +1,7 @@
-import { AccordionItem, FormFieldProps, InputNumberProps } from '@nuxt/ui'
+import type { AccordionItem, FormFieldProps, InputNumberProps } from '@nuxt/ui'
 
-import { ExtendedAlertProps } from '@/components/Alert.vue'
-import { BossZpBossData } from '@/entrypoints/boss/types'
+import type { ExtendedAlertProps } from '@/components/Alert.vue'
+import type { BossZpBossData } from '@/entrypoints/boss/types'
 import type { amapDistance, amapGeocode } from '@/utils/amap'
 
 export type JobBaseData = {

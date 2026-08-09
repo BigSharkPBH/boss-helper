@@ -3,7 +3,8 @@ import { defineProxy } from 'comctx'
 import { defineContentScript, injectScript } from '#imports'
 
 import './boss/inject.css'
-import { BackgroundCounter, InjectBackgroundAdapter } from '@/message/background'
+import type { BackgroundCounter} from '@/message/background';
+import { InjectBackgroundAdapter } from '@/message/background'
 import { ContentCounter } from '@/message/contentScript'
 import { ProvideContentScriptAdapter } from '@/message/contentScriptShare'
 
@@ -20,6 +21,7 @@ export default defineContentScript({
       () => new ContentCounter(injectBackgroundCounter(new InjectBackgroundAdapter())),
       {
         namespace: '__boss-helper-content__',
+        heartbeatTimeout: 3000,
       },
     )
 

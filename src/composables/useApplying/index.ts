@@ -1,15 +1,14 @@
-import { ContextLogger } from 'devlog-ui'
+import type { ContextLogger } from 'devlog-ui'
 import { shallowRef, ref } from 'vue'
 
 import { PipelineCacheManager } from '@/composables/usePipelineCache'
 import type { PipelineCacheItem, ProcessorType } from '@/types/pipelineCache'
 
-import { HelperContext } from '../useHelper'
+import type { HelperContext } from '../useHelper'
 import { DependencyMissingError } from './handles'
-import {
+import type {
   Handler,
   JobStatus,
-  jobStatusList,
   Task,
   TaskContext,
   TaskPipeline,
@@ -17,6 +16,7 @@ import {
   TaskStatus,
   WorkflowData,
 } from './type'
+import { jobStatusList } from './type'
 
 // 全局缓存管理器实例
 let cacheManager: PipelineCacheManager | null = null
@@ -122,7 +122,9 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     const _resolvedHandlers = new Map<string, any>()
     const errors = new Map<string, any>()
 
-    const rawTasks = items.flatMap((i) => (typeof i === 'function' ? { ...i() } : { ...i }))
+    const rawTasks = items.flatMap((i) =>
+      typeof i === 'function' ? { ...i() } : Array.isArray(i) ? i : { ...i },
+    )
     const requiredIds = new Set<string>()
     for (const task of rawTasks) {
       try {
@@ -298,7 +300,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           res = {
             isSkip: true,
             status: 'error',
-            reason: `任务${t.label ?? t.id}执行失败: ${e instanceof Error ? e.message : e}`,
+            reason: `任务${t.label ?? t.id}执行失败: ${e instanceof Error ? e.message : JSON.stringify(e)}`,
             msg: `报错/${t.label ?? t.id}`,
           }
           log.error(`任务${t.label ?? t.id}执行失败`, e)
@@ -313,8 +315,8 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
             })
             if (res.status) {
               helper.statistics.todayData.value.tasks[t.id] ??= {}
-              helper.statistics.todayData.value.tasks[t.id][res.status] ??= 0
-              helper.statistics.todayData.value.tasks[t.id][res.status] += 1
+              helper.statistics.todayData.value.tasks[t.id]![res.status] ??= 0
+              helper.statistics.todayData.value.tasks[t.id]![res.status]! += 1
             }
           }
         }
@@ -393,7 +395,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
       }
     } catch (e) {
       logger.error('投递未知错误', e)
-      stepMsg = `未知错误: ${e}`
+      stepMsg = `未知错误: ${e instanceof Error ? e.message : JSON.stringify(e)}`
     } finally {
       if (!stepMsg) {
         stepMsg = '投递结束'
@@ -402,7 +404,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         status.value = 'error'
         errorMessage.value = stepMsg
       }
-      helper.notification(stepMsg)
+      void helper.notification(stepMsg)
 
       const now = new Date()
       for (const t of pipeline.value) {

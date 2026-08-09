@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { DropdownMenuItem } from '@nuxt/ui'
+import type { DropdownMenuItem } from '@nuxt/ui';
 
 import { formInfoData, useConf } from '@/composables/conf'
 import { useHelper } from '@/composables/useHelper/index.js'
-import { type ConfigItem } from '@/composables/useHelper/type'
+import type { ConfigItem } from '@/composables/useHelper/type';
 
 import Address from './Address.vue'
 import Appearance from './Appearance.vue'
 import CustomGreeting from './CustomGreeting.vue'
-import SalaryRangeComponent from './Form/SalaryRange.vue'
+import FormRange from './Form/FormRange.vue'
 import SalaryRange from './SalaryRange.vue'
 
 const props = defineProps<{
@@ -63,7 +63,7 @@ const exp = computed(() => {
     v-model:enable="conf.formData.companySizeRange.enable"
     class="col-span-2 xl:col-span-1"
   >
-    <SalaryRangeComponent
+    <FormRange
       :controls="false"
       :value="conf.formData.companySizeRange.value"
       unit="人"
