@@ -1,7 +1,7 @@
 import type { StorageLikeAsync } from '@vueuse/core'
 import { defineProxy } from 'comctx'
 
-import type { ContentCounter } from './contentScript';
+import type { ContentCounter } from './contentScript'
 import { ProvideContentScriptAdapter } from './contentScriptShare'
 
 export const InjectAdapter = ProvideContentScriptAdapter
@@ -48,7 +48,16 @@ export const counter = new Proxy({} as ContentCounter, {
 
 export const ExtStorage: StorageLikeAsync = {
   async getItem(key) {
-    return counter.storageGet(key)
+    return new Promise((resolve) => {
+      const t = setInterval(() => {
+        if (_counter) {
+          void counter.storageGet(key).then((value) => {
+            return resolve(value as never)
+          })
+          clearInterval(t)
+        }
+      }, 200)
+    })
   },
   async setItem(key, value) {
     await counter.storageSet(key, value)
