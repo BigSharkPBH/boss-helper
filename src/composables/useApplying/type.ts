@@ -2,7 +2,7 @@ import type { ContextLogger } from 'devlog-ui'
 
 import type { HelperContext, JobData } from '@/composables/useHelper'
 
-import type { DeliveryWorkflow} from '.';
+import type { DeliveryWorkflow } from '.'
 import { useDeliveryWorkflow } from '.'
 import { DependencyMissingError } from './handles'
 

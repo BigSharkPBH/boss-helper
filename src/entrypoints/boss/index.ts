@@ -304,7 +304,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
     this.initNetConf()
     const contentElm = elm.querySelector<HTMLDivElement>('.recommend-result-inner')
     this.geek = new GeekChatClientManager()
-    await this.geek.connect()
+
     watch(
       appearanceConf.value,
       (v) => {
@@ -316,6 +316,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
       },
       { immediate: true },
     )
+    await this.geek.connect()
   }
   getConfigItems() {
     const conf = useConf()

@@ -37,15 +37,16 @@ const statisticCycleData = [
 ]
 
 const cycle = computed(() => {
-  const date = statisticCycleData[statisticCycle.value].date
+  const date = statisticCycleData[statisticCycle.value]?.date
   let ans = 0
+  if (!date) return ans
   for (
     let i = 0;
     // eslint-disable-next-line no-unmodified-loop-condition
     (date === -1 || i < date - 1) && i < statisticsData.value.length;
     i++
   ) {
-    ans += statisticsData.value[i].success
+    ans += statisticsData.value[i]?.success ?? 0
   }
   return ans
 })
@@ -91,7 +92,7 @@ onMounted(() => {
           <span class="text-sm text-gray-400">%</span>
         </div>
       </div>
-      <div :data-help="statisticCycleData[statisticCycle].help">
+      <div :data-help="statisticCycleData[statisticCycle]?.help">
         <UDropdownMenu
           :items="
             statisticCycleData.map((item, index) => ({
@@ -101,7 +102,7 @@ onMounted(() => {
           "
         >
           <div class="text-sm text-gray-500 cursor-pointer flex items-center gap-1">
-            {{ statisticCycleData[statisticCycle].label }}:
+            {{ statisticCycleData[statisticCycle]?.label }}:
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 1024 1024">
               <path
                 fill="currentColor"

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { TabsItem } from '@nuxt/ui'
+import type { TabsItem } from '@nuxt/ui'
 import { useRafFn } from '@vueuse/core'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 

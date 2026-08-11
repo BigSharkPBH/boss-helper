@@ -13,7 +13,7 @@ export default defineConfig({
     'import/consistent-type-specifier-style': 'error',
     'typescript/no-redundant-type-constituents': 'off',
   },
-  ignorePatterns: ['*.min.js', '/packages','/.claude'],
+  ignorePatterns: ['*.min.js', '/packages', '/.claude'],
   options: {
     typeAware: true,
   },

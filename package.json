@@ -1,7 +1,7 @@
 {
   "name": "boss-helper",
   "displayName": "BossHelper",
-  "version": "0.5.2",
+  "version": "0.5.2.1",
   "private": true,
   "description": "Boss直聘助手, 皆在减少投递简历的麻烦, 和提高投递简历的效率,技术栈使用VIte + Vue3 + element-plus",
   "workspaces": [
@@ -11,16 +11,16 @@
   "scripts": {
     "dev": "wxt",
     "dev:edge": "wxt -b edge",
-    "dev:firefox": "wxt -b firefox",
+    "dev:firefox": "wxt -b firefox --mv3",
     "postinstall": "wxt prepare",
     "check": "vue-tsc --noEmit",
     "build": "run-p build:chrome build:firefox build:edge",
     "build:chrome": "wxt build -b chrome",
-    "build:firefox": "wxt build -b firefox",
+    "build:firefox": "wxt build -b firefox --mv3",
     "build:edge": "wxt build -b edge",
     "zip": "run-p zip:chrome zip:firefox zip:edge",
     "zip:chrome": "wxt zip -b chrome",
-    "zip:firefox": "wxt zip -b firefox",
+    "zip:firefox": "wxt zip -b firefox --mv3",
     "zip:edge": "wxt zip -b edge",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",

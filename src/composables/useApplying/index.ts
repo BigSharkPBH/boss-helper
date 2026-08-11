@@ -369,8 +369,8 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         for (const [index, jobData] of helper.jobList.value.entries()) {
           current.value = index + 1
           if (isStop()) break
-          const status = helper.jobResultMaps.get(jobData.key)?.status
-          if (status === 'success' || status === 'warn') {
+          const jobStatus = helper.jobResultMaps.get(jobData.key)?.status
+          if (jobStatus === 'success' || jobStatus === 'warn') {
             continue
           }
           const data = {
@@ -381,6 +381,13 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           helper.jobMaps.set(jobData.key, data)
           helper.currentJob.value = jobData.key
           await execute(data, index)
+          if (
+            helper.statistics.todayData.value.success >= helper.conf.formData.deliveryLimit.value
+          ) {
+            stepMsg = `投递达到数量限制`
+            status.value = 'stop'
+            break
+          }
           await delay(helper.conf.formData.delayDeliveryInterval, isStop)
         }
         if (isStop()) break

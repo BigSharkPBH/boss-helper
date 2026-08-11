@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { DropdownMenuItem } from '@nuxt/ui';
+import type { DropdownMenuItem } from '@nuxt/ui'
 
 import { formInfoData, useConf } from '@/composables/conf'
 import { useHelper } from '@/composables/useHelper/index.js'
-import type { ConfigItem } from '@/composables/useHelper/type';
+import type { ConfigItem } from '@/composables/useHelper/type'
 
 import Address from './Address.vue'
 import Appearance from './Appearance.vue'

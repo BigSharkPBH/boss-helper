@@ -1,4 +1,4 @@
-import type { LogLevel} from 'devlog-ui';
+import type { LogLevel } from 'devlog-ui'
 import { logger, LogPersistence } from 'devlog-ui'
 
 LogPersistence.enable({

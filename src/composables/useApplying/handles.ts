@@ -2,7 +2,7 @@ import { renderTemplate } from '@/utils/ai'
 import type { HelperContext } from '~/composables/useHelper'
 
 import { sameCompanyKey, sameHrKey } from '../../entrypoints/boss/requests'
-import type { JobStatus, TaskContext, TaskResult } from './type';
+import type { JobStatus, TaskContext, TaskResult } from './type'
 import { defineTaskHandler } from './type'
 import { loadSet, parseFiltering, rangeMatch, rangeMatchFormat, saveSet } from './utils'
 

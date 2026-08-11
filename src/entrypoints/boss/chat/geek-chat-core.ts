@@ -1,5 +1,5 @@
 // @ts-nocheck
-import type { Root, Type } from 'protobufjs';
+import type { Root, Type } from 'protobufjs'
 import protobufjs from 'protobufjs'
 
 const ProtoFile =
