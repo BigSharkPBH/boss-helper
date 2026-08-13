@@ -25,7 +25,8 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint --type-aware",
-    "lint:fix": "oxlint --type-aware --fix"
+    "lint:fix": "oxlint --type-aware --fix",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.36",
@@ -73,6 +74,6 @@
   },
   "lint-staged": {
     "*": "oxfmt --no-error-on-unmatched-pattern",
-    "*.{js,jsx,ts,tsx,mjs,cjs}": "oxlint --fix"
+    "*.{js,jsx,ts,tsx,mjs,cjs,vue}": "oxlint --fix"
   }
 }
