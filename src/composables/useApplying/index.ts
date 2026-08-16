@@ -88,15 +88,16 @@ export function applyCachedJobResult(
   if (cached.status === 'success') {
     helper.jobResultMaps.set(job.key, {
       status: 'success',
-      msg: `${cached.message}（缓存）`,
+      msg: '投递成功',
       isCache: true,
+      reason: cached.message,
     })
     return true
   }
   if (cached.status === 'warn' && cached.filterFingerprint === fingerprint) {
     helper.jobResultMaps.set(job.key, {
       status: 'warn',
-      msg: `${cached.message}（缓存）`,
+      msg: '已过滤',
       isCache: true,
       isSkip: true,
       reason: cached.message,
@@ -440,6 +441,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           },
         })
         if (res != null) {
+          res.id ??= t.id
           res.msg ??= t.label ?? t.id
           res.status ??= res.isSkip ? 'warn' : undefined
           helper.jobResultMaps.set(data.jobData.key, {
@@ -475,6 +477,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         const reason = `任务${t.label ?? t.id}执行失败: ${e instanceof Error ? e.message : JSON.stringify(e)}`
         helper.jobResultMaps.set(data.jobData.key, {
           isSkip: true,
+          id: t.id,
           status: 'error',
           reason,
           msg: message,
