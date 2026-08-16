@@ -108,6 +108,11 @@ export interface FormDataAi {
   model?: string
   prompt: Prompt
   enable: boolean
+  prefilterPhrases?: string[]
+  llmTriggerWords?: string[]
+  compactJd?: {
+    noiseWords?: string[]
+  }
 }
 
 export type CustomGreetingItemText = {
