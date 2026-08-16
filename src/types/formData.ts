@@ -50,6 +50,7 @@ export interface FormData {
   delayDeliveryStarts: number
   delayDeliveryInterval: number
   delayDeliveryPageNext: number
+  refreshSearchEveryPages: number
   delayMessageSending: number
   version: string
 

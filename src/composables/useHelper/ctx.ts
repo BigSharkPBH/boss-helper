@@ -81,6 +81,7 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
   }
 
   abstract loadMoreJob(delay: Promise<any>): Promise<boolean>
+  abstract refreshJobSearch(delay: Promise<any>): Promise<boolean>
   abstract onMount(): Promise<void>
   abstract getConfigItems(): ComputedRef<[AlertItem[], (ConfigAccordionItem | false)[]]>
 

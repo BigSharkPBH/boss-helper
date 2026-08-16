@@ -52,6 +52,24 @@ const initSearch = useHookVueFn('#wrap .page-job-wrapper,.job-recommend-main,.pa
   'onSearch',
 ])
 
+function waitJobListRefresh(predicate: () => boolean, timeoutMs: number): Promise<boolean> {
+  if (predicate()) {
+    return Promise.resolve(true)
+  }
+  const start = Date.now()
+  return new Promise((resolve) => {
+    const timer = setInterval(() => {
+      if (predicate()) {
+        clearInterval(timer)
+        resolve(true)
+      } else if (Date.now() - start >= timeoutMs) {
+        clearInterval(timer)
+        resolve(false)
+      }
+    }, 200)
+  })
+}
+
 function formatActiveTime(timestamp: number): string {
   const now = Date.now()
   const diff = now - timestamp
@@ -143,6 +161,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
   _pageChange = (_v: number) => {
     throw new Error('pageChange is undefined')
   }
+  _searchJob?: (page?: number) => void
   _clickJobCardAction = (_: BossZpJobItemData) => {}
   _jobList: Ref<BossZpJobItemData[]>
   _jobDataMap: Map<string, BoosJobData>
@@ -213,6 +232,34 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
       return false
     }
     return true
+  }
+
+  async refreshJobSearch(delay: Promise<any>): Promise<boolean> {
+    try {
+      const oldLen = this._jobList.value.length
+      const oldFirstJobId = this._jobList.value[0]?.encryptJobId ?? ''
+      const oldPage = this._page.value.page
+      const search = this._searchJob ?? this._pageChange
+      search(1)
+      await delay
+      const refreshed = await waitJobListRefresh(() => {
+        const pageReset = oldPage !== 1 && this._page.value.page === 1
+        const listChanged =
+          (this._jobList.value[0]?.encryptJobId ?? '') !== oldFirstJobId ||
+          this._jobList.value.length !== oldLen
+        return pageReset || listChanged
+      }, 10000)
+      if (!refreshed) {
+        logger.error('重搜: 列表未刷新')
+        return false
+      }
+      logger.info('重搜: 已回到第1页以获取新岗位')
+      this.logs.info('重新搜索', '已回到第1页以获取新岗位')
+      return true
+    } catch (err) {
+      logger.error('重搜: 失败', err)
+      return false
+    }
   }
 
   async start() {
@@ -511,6 +558,19 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
                   },
                   {
                     type: 'inputNumber',
+                    key: 'refreshSearchEveryPages',
+                    fieldProps: {
+                      label: '重搜间隔',
+                      'data-help':
+                        '每处理完这么多页后重新搜索，回到第1页以捞到新岗位；已投过的会跳过。0 为关闭。默认5页。过小可能触发风控。',
+                    },
+                    inputNumberProps: {
+                      min: 0,
+                      max: 99,
+                    },
+                  },
+                  {
+                    type: 'inputNumber',
                     key: 'delayMessageSending',
                     fieldProps: {
                       label: '消息发送',
@@ -639,14 +699,14 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
   }
 
   async _initPageChange() {
-    let pc =
+    const isRecommend =
       location.href.includes('/web/geek/job-recommend') || location.href.includes('/web/geek/jobs')
-        ? await initSearch()
-        : await initChange()
+    const pc = isRecommend ? await initSearch() : await initChange()
     if (!pc) {
       throw new Error('pageChange is undefined')
     }
     this._pageChange = pc
+    this._searchJob = (await initSearch()) ?? pc
   }
 
   async _initClickJobCardAction() {

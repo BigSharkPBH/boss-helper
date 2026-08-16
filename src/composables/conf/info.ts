@@ -314,6 +314,7 @@ export const defaultFormData: FormData = {
   delayDeliveryStarts: 3,
   delayDeliveryInterval: 5,
   delayDeliveryPageNext: 60,
+  refreshSearchEveryPages: 5,
   delayMessageSending: 2,
   version: '20260816',
 }

@@ -604,6 +604,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
       const commitTasks = pipeline.value.filter((t) => COMMIT_TASK_IDS.has(t.id))
       const { list, detail, after, ai } = splitPrepareTasks(prepareTasks)
       let lastAddAt = 0
+      let pagesSinceRefresh = 0
 
       while (status.value === 'running') {
         if (helper.jobList.value.length === 0) {
@@ -820,9 +821,23 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
         await Promise.all([producer, consumer])
         if (isStop()) break
 
+        pagesSinceRefresh++
         const since = lastAddAt || pageStartedAt
         const remain = helper.conf.formData.delayDeliveryPageNext - (Date.now() - since) / 1000
-        const hasMore = await helper.loadMoreJob(delay(Math.max(0, remain), isStop))
+        const wait = delay(Math.max(0, remain), isStop)
+        const refreshEvery = helper.conf.formData.refreshSearchEveryPages
+        let hasMore = false
+        if (refreshEvery > 0 && pagesSinceRefresh >= refreshEvery) {
+          hasMore = await helper.refreshJobSearch(wait)
+          if (hasMore) {
+            pagesSinceRefresh = 0
+          } else {
+            logger.warn('重搜失败，回退为普通翻页')
+            hasMore = await helper.loadMoreJob(Promise.resolve())
+          }
+        } else {
+          hasMore = await helper.loadMoreJob(wait)
+        }
         if (!hasMore) {
           status.value = 'stop'
           stepMsg = '投递结束, 无法继续下一页'
