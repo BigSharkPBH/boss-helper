@@ -3,6 +3,7 @@ import { shallowRef, ref } from 'vue'
 
 import { PipelineCacheManager } from '@/composables/usePipelineCache'
 import type { PipelineCacheItem, ProcessorType } from '@/types/pipelineCache'
+import { persistLog } from '@/utils/persistentLogs'
 
 import type { HelperContext } from '../useHelper'
 import { DependencyMissingError } from './handles'
@@ -275,6 +276,20 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
       job_key: data.jobData.key,
       job_name: data.jobData.jobName,
     })
+    await persistLog({
+      level: 'info',
+      title: '开始处理岗位',
+      job: {
+        key: data.jobData.key,
+        name: data.jobData.jobName,
+        company: data.jobData.brand.name,
+        link: data.jobData.link,
+      },
+      data: {
+        job: data.jobData,
+        jobItem: (data.rawData as any).jobitem,
+      },
+    })
     try {
       let skipPipeline = false
       let errorLog = false
@@ -287,6 +302,22 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
             msg: t.stateMsg || '运行中',
           })
           res = await executeTask(t, data, index, log)
+          await persistLog({
+            level: res?.isSkip ? 'warn' : 'info',
+            title: `岗位步骤完成：${t.label ?? t.id}`,
+            message: res?.msg ?? res?.reason,
+            job: {
+              key: data.jobData.key,
+              name: data.jobData.jobName,
+              company: data.jobData.brand.name,
+              link: data.jobData.link,
+            },
+            data: {
+              task: { id: t.id, label: t.label, state: t.state, stateMsg: t.stateMsg },
+              result: res,
+              state: data.state,
+            },
+          })
           if (res != null) {
             res.msg ??= t.label ?? t.id
             res.status ??= res.isSkip ? 'warn' : undefined
@@ -304,6 +335,30 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
             msg: `报错/${t.label ?? t.id}`,
           }
           log.error(`任务${t.label ?? t.id}执行失败`, e)
+          await persistLog({
+            level: 'error',
+            title: `岗位步骤失败：${t.label ?? t.id}`,
+            message: e instanceof Error ? e.message : String(e),
+            job: {
+              key: data.jobData.key,
+              name: data.jobData.jobName,
+              company: data.jobData.brand.name,
+              link: data.jobData.link,
+            },
+            data: { task: { id: t.id, label: t.label }, error: e, state: data.state },
+          })
+          await persistLog({
+            level: 'error',
+            title: '岗位处理失败',
+            message: `任务${t.label ?? t.id}执行失败`,
+            job: {
+              key: data.jobData.key,
+              name: data.jobData.jobName,
+              company: data.jobData.brand.name,
+              link: data.jobData.link,
+            },
+            data: { job: data.jobData, rawData: data.rawData, result: res, state: data.state },
+          })
           skipPipeline = true
           errorLog = true
           break
@@ -327,9 +382,33 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           msg: '投递成功',
         })
         helper.statistics.todayData.value.success++
+        await persistLog({
+          level: 'success',
+          title: '岗位投递完成',
+          message: '投递成功',
+          job: {
+            key: data.jobData.key,
+            name: data.jobData.jobName,
+            company: data.jobData.brand.name,
+            link: data.jobData.link,
+          },
+          data: { job: data.jobData, rawData: data.rawData, state: data.state },
+        })
       } else if (!errorLog) {
         const r = helper.jobResultMaps.get(data.jobData.key)
         log.warn(`投递过滤: ${data.jobData.jobName}`, r?.msg, r?.reason)
+        await persistLog({
+          level: 'warn',
+          title: '岗位已跳过',
+          message: r?.reason ?? r?.msg,
+          job: {
+            key: data.jobData.key,
+            name: data.jobData.jobName,
+            company: data.jobData.brand.name,
+            link: data.jobData.link,
+          },
+          data: { job: data.jobData, rawData: data.rawData, result: r, state: data.state },
+        })
       }
     } catch (e) {
       status.value = 'error'
