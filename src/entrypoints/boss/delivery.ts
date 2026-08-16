@@ -71,34 +71,68 @@ export const bossWorkflow = defineTaskWorkflow<BossHelperCtx, BoosJobData>(
 
   tasks.amap({ deps: ['岗位详情获取'] }), // 高德地图
   tasks.aiFiltering({ deps: ['岗位详情获取'] }), // AI过滤
+  tasks.customGreeting({ deps: ['岗位详情获取'] }),
+  tasks.aiGreeting({ deps: ['岗位详情获取'] }),
 
-  defineTaskHandler('岗位投递', () => async (_, { rawData }) => {
-    await sendPublishReq({
-      securityId: rawData.jobitem.securityId,
-      encryptJobId: rawData.jobitem.encryptJobId,
-    })
-    return {
-      status: 'success',
-      msg: '投递成功',
-    }
-  }), // 投递
+  defineTaskHandler('岗位投递', () => ({
+    fn: async (_, { rawData, jobData }) => {
+      if (tasks.isDuplicateCompany(jobData)) {
+        return taskResult.skip('相同公司已投递')
+      }
+      if (tasks.isDuplicateHr(jobData)) {
+        return taskResult.skip('相同hr已投递')
+      }
+      await sendPublishReq({
+        securityId: rawData.jobitem.securityId,
+        encryptJobId: rawData.jobitem.encryptJobId,
+      })
+      tasks.markDelivered(jobData)
+      return {
+        status: 'success',
+        msg: '投递成功',
+      }
+    },
+  })), // 投递
 
-  defineTaskHandler('Boss信息获取', () => async (ctx, { rawData }) => {
-    // await sendPublishReq({
-    //   securityId: rawData.jobitem.securityId,
-    //   encryptJobId: rawData.jobitem.encryptJobId,
-    // })
-    ctx.log.info('获取Boss信息', {
-      securityId: rawData.jobitem.securityId,
-      encryptJobId: rawData.jobitem.encryptJobId,
-    })
-    const bossData = await getBossData({
-      securityId: rawData.jobitem.securityId,
-      encryptUserId: ctx.helper.uid,
-    })
-    rawData.boss = bossData
-  }), // Boss信息获取
+  defineTaskHandler(
+    'Boss信息获取',
+    (ctx) => {
+      if (
+        !ctx.helper.conf.formData.aiGreeting.enable &&
+        !ctx.helper.conf.formData.customGreeting.enable
+      ) {
+        return
+      }
+      return async (ctx, { rawData }) => {
+        ctx.log.info('获取Boss信息', {
+          securityId: rawData.jobitem.securityId,
+          encryptJobId: rawData.jobitem.encryptJobId,
+        })
+        const bossData = await getBossData({
+          securityId: rawData.jobitem.securityId,
+          encryptUserId: ctx.helper.uid,
+        })
+        rawData.boss = bossData
+      }
+    },
+    { deps: ['岗位投递'] },
+  ),
 
-  tasks.customGreeting({ deps: ['岗位详情获取', '岗位投递', 'Boss信息获取'] }), // 自定义招呼语
-  tasks.aiGreeting({ deps: ['岗位详情获取', '岗位投递', 'Boss信息获取'] }), // AI招呼语
+  defineTaskHandler(
+    '打招呼',
+    (ctx) => {
+      if (
+        !ctx.helper.conf.formData.aiGreeting.enable &&
+        !ctx.helper.conf.formData.customGreeting.enable
+      ) {
+        return
+      }
+      return async (ctx, data) => {
+        const msg = data.state.pendingGreeting
+        if (msg == null || msg === '') return
+        await ctx.helper.sendMessage?.(data, msg)
+      }
+    },
+    { deps: ['岗位投递', 'Boss信息获取'] },
+  ),
 )

@@ -215,7 +215,7 @@ export const defaultFormData: FormData = {
     value: true,
   },
   useCache: {
-    value: false,
+    value: true,
   },
   aiGreeting: {
     enable: false,
@@ -315,5 +315,5 @@ export const defaultFormData: FormData = {
   delayDeliveryInterval: 5,
   delayDeliveryPageNext: 60,
   delayMessageSending: 2,
-  version: '20260718',
+  version: '20260816',
 }

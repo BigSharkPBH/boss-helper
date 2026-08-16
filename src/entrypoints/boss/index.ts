@@ -2,6 +2,8 @@ import { ref } from 'vue'
 
 import { defineUnlistedScript } from '#imports'
 import { appearanceConf, useConf } from '@/composables/conf'
+import { applyCachedJobResult } from '@/composables/useApplying'
+import { buildFilterFingerprint } from '@/composables/useApplying/fingerprint'
 import type { WorkflowData } from '@/composables/useApplying/type'
 import { createLazyObject, isInitialized } from '@/composables/useApplying/type'
 import type { JobData } from '@/composables/useHelper'
@@ -68,6 +70,9 @@ function convertBossZpJobItemToJobData(item: BossZpJobItemData): JobData {
   return {
     key,
     link: `https://www.zhipin.com/job_detail/${item.encryptJobId}.html`,
+    encryptJobId: item.encryptJobId,
+    encryptBossId: item.encryptBossId,
+    encryptBrandId: item.encryptBrandId,
     jobName: item.jobName,
     positionName: item.jobName,
     jobDescription: '',
@@ -472,7 +477,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
                     key: 'delayDeliveryStarts',
                     fieldProps: {
                       label: '投递开始',
-                      'data-help': '点击投递按钮会等待一段时间,默认值10s',
+                      'data-help': '点击投递按钮会等待一段时间,默认值3s',
                     },
                     inputNumberProps: {
                       min: 1,
@@ -484,7 +489,8 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
                     key: 'delayDeliveryInterval',
                     fieldProps: {
                       label: '投递间隔',
-                      'data-help': '每个投递的间隔,太快易风控,默认值2s',
+                      'data-help':
+                        '每次实际投递（friend/add）后的间隔,太快易风控,默认值5s。过滤跳过不等待此间隔。',
                     },
                     inputNumberProps: {
                       min: 1,
@@ -496,7 +502,7 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
                     key: 'delayDeliveryPageNext',
                     fieldProps: {
                       label: '投递翻页',
-                      'data-help': '投递完下一页之后等待的间隔,太快易风控,默认值60s',
+                      'data-help': '距上一次实际投递的最小翻页间隔,太快易风控,默认值60s',
                     },
                     inputNumberProps: {
                       min: 1,
@@ -579,16 +585,6 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
       this._jobList,
       (v) => {
         this.jobList.value = v.map((item) => {
-          // const jobData = convertBossZpJobItemToJobData(item)
-          // if (this.conf.formData.useCache.value) {
-          //   const cacheCheck = checkJobCache(jobData.key)
-          //   if (cacheCheck) {
-          //     jobData.status = {
-          //       status: cacheCheck.status,
-          //       msg: `${cacheCheck.message} (缓存)`,
-          //     }
-          //   }
-          // }
           const job = convertBossZpJobItemToJobData(item)
 
           let jobData = this._jobDataMap.get(job.key)
@@ -608,11 +604,13 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
 
           return job
         })
+        const fingerprint = buildFilterFingerprint(this.conf.formData)
         this.jobList.value.forEach((job) => {
+          applyCachedJobResult(this, job, fingerprint)
           this.jobMaps.set(job.key, {
             jobData: job,
             rawData: this._jobDataMap.get(job.key)!,
-            state: {},
+            state: this.jobMaps.get(job.key)?.state ?? {},
           })
         })
       },
