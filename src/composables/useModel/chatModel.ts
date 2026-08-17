@@ -1,5 +1,3 @@
-import type { OpenAIProvider } from '@ai-sdk/openai'
-import { createOpenAI } from '@ai-sdk/openai'
 import type { ChatMessageProps } from '@nuxt/ui'
 import type { ChatState, ChatStatus, ModelMessage, UIMessage } from 'ai'
 import {
@@ -18,6 +16,7 @@ import { renderTemplate } from '@/utils/ai'
 import type { ModelConf } from '.'
 import type { WorkflowData } from '../useApplying/type'
 import type { HelperContext } from '../useHelper'
+import { openai } from './openai'
 
 const role = ['system', 'user', 'assistant', 'boss', 'jd', 'filtering', 'greetings'] as const
 type MessageRole = (typeof role)[number]
@@ -84,7 +83,7 @@ export class ChatModel {
 
   jobs = ref<string[]>([])
 
-  providers: Map<string, OpenAIProvider> = new Map()
+  models: Map<string, ReturnType<typeof openai.createModel>> = new Map()
   agents: Map<MessageRole, [ToolLoopAgent, ModelConf, FormDataAi]> = new Map()
   generateId: { [key in MessageRole]: () => string }
 
@@ -109,20 +108,17 @@ export class ChatModel {
     },
   ): boolean {
     const conf = this.ctx.models.modelData.value.find((m) => m.key === model.model)
-    if (!conf || !model.model) {
+    if (!conf || !model.model || !conf.data) {
       return false
     }
-    let provider = this.providers.get(model.model)
-    if (!provider) {
-      provider = createOpenAI({
-        baseURL: conf.data?.base_url,
-        apiKey: conf.data?.api_key,
-      })
+    let languageModel = this.models.get(model.model)
+    if (!languageModel) {
+      languageModel = openai.createModel(conf.data)
+      this.models.set(model.model, languageModel)
     }
-    this.providers.set(model.model, provider)
 
     const agent = new ToolLoopAgent({
-      model: provider.chat(conf.data?.model || 'gpt-4o'),
+      model: languageModel,
       output: opt?.json ? Output.json() : Output.text(),
       allowSystemInMessages: true,
     })

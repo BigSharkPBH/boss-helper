@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import Alert from '@/components/Alert.vue'
 import type { ModelConf } from '@/composables/useModel'
 import { useModel } from '@/composables/useModel'
+import { OPENCODE_GO_BASE_URL } from '@/composables/useModel/openai'
 import deepmerge, { jsonClone } from '@/utils/deepmerge'
 import { exportJson, importJson } from '@/utils/jsonImportExport'
 
@@ -34,6 +35,24 @@ function edit(d: ModelConf) {
 
 function newllm() {
   createModelData.value = undefined
+  createBoxShow.value = true
+}
+
+function newOpenCodeGo() {
+  createModelData.value = {
+    name: 'OpenCode Go',
+    key: '',
+    data: {
+      mode: 'openai',
+      avatar: '',
+      base_url: OPENCODE_GO_BASE_URL,
+      api_key: '',
+      model: 'deepseek-v4-flash',
+      responses: false,
+      other: {},
+      advanced: {},
+    },
+  } satisfies ModelConf
   createBoxShow.value = true
 }
 
@@ -129,6 +148,9 @@ function importllm() {
         <UButton color="neutral" variant="outline" @click="close"> 取消 </UButton>
         <UButton color="success" @click="exportllm"> 导出 </UButton>
         <UButton color="success" @click="importllm"> 导入 </UButton>
+        <UButton color="neutral" variant="outline" @click="newOpenCodeGo">
+          接入 OpenCode Go
+        </UButton>
         <UButton @click="newllm"> 新建 </UButton>
         <UButton @click="modelStore.saveModel"> 保存 </UButton>
       </div>
