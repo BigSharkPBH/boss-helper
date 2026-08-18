@@ -245,6 +245,7 @@ ${data.jobData.jobDescription}`,
     }
     let index = -1
     let usage: LanguageModelUsage | undefined
+    const startedAt = performance.now()
     const stream = await agent.stream({
       timeout,
       messages,
@@ -348,7 +349,16 @@ ${data.jobData.jobDescription}`,
     } catch (error) {
       logger.debug('读取 LLM usage 失败', error)
     }
-    this.recordTokenUsage(agentName, modelConf, data, usage)
+    // 只记成功调用：token 与耗时写在同一条明细里。
+    if (!state.error) {
+      this.recordTokenUsage(
+        agentName,
+        modelConf,
+        data,
+        usage,
+        Math.round(performance.now() - startedAt),
+      )
+    }
 
     if (state.error) {
       throw state.error
@@ -371,6 +381,7 @@ ${data.jobData.jobDescription}`,
     modelConf: ModelConf,
     data: WorkflowData<any, any>,
     usage: LanguageModelUsage | undefined,
+    durationMs: number,
   ) {
     const kind = TOKEN_USAGE_KIND[agentName]
     if (!kind) return
@@ -391,6 +402,7 @@ ${data.jobData.jobDescription}`,
       promptTokens,
       completionTokens,
       totalTokens,
+      durationMs,
       jobTitle: data.jobData.jobName ?? data.jobData.positionName,
       jobKey: data.jobData.key,
     })

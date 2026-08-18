@@ -3,7 +3,15 @@ import type { TableColumn } from '@nuxt/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useHelper } from '@/composables/useHelper'
-import { summarizeTokenUsage, tokenUsageWindowStart } from '@/composables/useTokenUsage'
+import {
+  buildTokenUsageCsv,
+  buildTokenUsageJson,
+  downloadTokenUsageFile,
+  summarizeTokenUsage,
+  TOKEN_USAGE_WINDOW_LABEL,
+  tokenUsageExportBasename,
+  tokenUsageWindowStart,
+} from '@/composables/useTokenUsage'
 import type { TokenUsageKind, TokenUsageRecord, TokenUsageWindow } from '@/types/tokenUsage'
 
 const helper = useHelper()
@@ -12,9 +20,9 @@ const windowDays = ref<TokenUsageWindow>(1)
 const clearing = ref(false)
 
 const windows: { label: string; value: TokenUsageWindow }[] = [
-  { label: '当天', value: 1 },
-  { label: '3天', value: 3 },
-  { label: '7天', value: 7 },
+  { label: TOKEN_USAGE_WINDOW_LABEL[1], value: 1 },
+  { label: TOKEN_USAGE_WINDOW_LABEL[3], value: 3 },
+  { label: TOKEN_USAGE_WINDOW_LABEL[7], value: 7 },
 ]
 
 const kindLabel: Record<TokenUsageKind, string> = {
@@ -31,6 +39,7 @@ const rows = computed(() => {
 })
 
 const summary = computed(() => summarizeTokenUsage(rows.value))
+const canExport = computed(() => rows.value.length > 0)
 
 watch(open, (value) => {
   if (value) void helper.tokenUsage.load()
@@ -44,6 +53,7 @@ const columns: TableColumn<TokenUsageRecord>[] = [
   { id: 'promptTokens', header: 'Input' },
   { id: 'completionTokens', header: 'Output' },
   { id: 'totalTokens', header: 'Total' },
+  { id: 'durationMs', header: '耗时' },
 ]
 
 function formatTokens(value?: number) {
@@ -51,8 +61,33 @@ function formatTokens(value?: number) {
   return value.toLocaleString()
 }
 
+function formatDuration(value?: number | null) {
+  if (value == null) return '—'
+  return `${value.toLocaleString()} ms`
+}
+
 function formatTime(time: number) {
   return new Date(time).toLocaleString()
+}
+
+function exportCsv() {
+  if (!canExport.value) return
+  const basename = tokenUsageExportBasename(windowDays.value)
+  downloadTokenUsageFile(
+    buildTokenUsageCsv(rows.value, windowDays.value),
+    `${basename}.csv`,
+    'text/csv;charset=utf-8',
+  )
+}
+
+function exportJsonFile() {
+  if (!canExport.value) return
+  const basename = tokenUsageExportBasename(windowDays.value)
+  downloadTokenUsageFile(
+    buildTokenUsageJson(rows.value, windowDays.value),
+    `${basename}.json`,
+    'application/json;charset=utf-8',
+  )
 }
 
 async function clearRecords() {
@@ -79,7 +114,7 @@ async function clearRecords() {
           color="info"
           variant="subtle"
           title="按账号隔离，保留近 7 天明细"
-          description="数字来自模型返回的 usage（prompt/completion/total），覆盖 AI 过滤与 AI 打招呼的实际调用，不做估算。"
+          description="数字来自模型返回的 usage（prompt/completion/total），覆盖 AI 过滤与 AI 打招呼的成功调用；耗时为发出请求到拿到返回的毫秒数。可导出当前窗口的 CSV / JSON 对账。"
         />
         <UFieldGroup>
           <UButton
@@ -93,7 +128,7 @@ async function clearRecords() {
             {{ item.label }}
           </UButton>
         </UFieldGroup>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div>
             <div class="text-sm text-gray-500">调用次数</div>
             <div class="text-2xl font-semibold">
@@ -113,6 +148,10 @@ async function clearRecords() {
             <div class="text-sm text-gray-500">Total</div>
             <div class="text-2xl font-semibold">{{ formatTokens(summary.totalTokens) }}</div>
           </div>
+          <div>
+            <div class="text-sm text-gray-500">平均耗时</div>
+            <div class="text-2xl font-semibold">{{ formatDuration(summary.avgDurationMs) }}</div>
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -127,6 +166,33 @@ async function clearRecords() {
             <div class="text-lg font-semibold">
               {{ summary.byKind.aiGreeting.calls }} 次 /
               {{ formatTokens(summary.byKind.aiGreeting.totalTokens) }} tokens
+            </div>
+          </div>
+        </div>
+        <div v-if="summary.byModel.length > 0" class="flex flex-col gap-3">
+          <div class="text-sm text-gray-500">按模型</div>
+          <div
+            class="grid gap-4"
+            :class="summary.byModel.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'"
+          >
+            <div v-for="item in summary.byModel" :key="`${item.modelName}\0${item.model}`">
+              <div class="text-sm text-gray-500">
+                {{ item.modelName }}
+                <span
+                  v-if="item.model && item.model !== item.modelName"
+                  class="text-xs text-gray-400"
+                >
+                  （{{ item.model }}）
+                </span>
+              </div>
+              <div class="text-lg font-semibold">
+                {{ item.calls }} 次 / {{ formatTokens(item.totalTokens) }} tokens
+              </div>
+              <div class="text-sm text-gray-500">
+                Input {{ formatTokens(item.promptTokens) }} · Output
+                {{ formatTokens(item.completionTokens) }} · 平均
+                {{ formatDuration(item.avgDurationMs) }}
+              </div>
             </div>
           </div>
         </div>
@@ -166,13 +232,22 @@ async function clearRecords() {
             <template #totalTokens-cell="{ row }">
               {{ formatTokens(row.original.totalTokens) }}
             </template>
+            <template #durationMs-cell="{ row }">
+              {{ formatDuration(row.original.durationMs) }}
+            </template>
           </UTable>
         </div>
       </div>
     </template>
     <template #footer>
-      <div class="flex justify-end gap-2">
+      <div class="flex flex-wrap justify-end gap-2">
         <UButton color="neutral" variant="outline" @click="open = false">关闭</UButton>
+        <UButton color="success" variant="outline" :disabled="!canExport" @click="exportCsv">
+          导出 CSV
+        </UButton>
+        <UButton color="success" variant="outline" :disabled="!canExport" @click="exportJsonFile">
+          导出 JSON
+        </UButton>
         <UButton
           color="error"
           variant="soft"

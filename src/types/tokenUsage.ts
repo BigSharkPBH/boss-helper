@@ -11,14 +11,35 @@ export interface TokenUsageRecord {
   promptTokens?: number
   completionTokens?: number
   totalTokens?: number
+  durationMs?: number
   jobTitle?: string
   jobKey?: string
 }
 
-export interface TokenUsageSummary {
+export interface TokenUsageKindSummary {
   calls: number
   promptTokens: number
   completionTokens: number
   totalTokens: number
-  byKind: Record<TokenUsageKind, Omit<TokenUsageSummary, 'byKind'>>
+  avgDurationMs: number | null
+}
+
+export interface TokenUsageModelSummary extends TokenUsageKindSummary {
+  model: string
+  modelName: string
+}
+
+export interface TokenUsageSummary extends TokenUsageKindSummary {
+  byKind: Record<TokenUsageKind, TokenUsageKindSummary>
+  byModel: TokenUsageModelSummary[]
+}
+
+export interface TokenUsageExportPayload {
+  exportedAt: string
+  windowDays: TokenUsageWindow
+  windowLabel: string
+  windowStart: number
+  windowEnd: number
+  summary: TokenUsageSummary
+  records: TokenUsageRecord[]
 }
