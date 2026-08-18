@@ -243,6 +243,7 @@ const createModel = (conf: OpenaiLLMConf) => {
   if (isOpenCodeGoBaseUrl(baseURL)) {
     const api = getOpenCodeGoApi(conf.model)
     // MAIN world 在 zhipin.com 下会触发 CORS，Go 请求改走扩展后台。
+    // 只创建无状态 LanguageModel，不持有 conversation / previous_response_id。
     if (api === 'responses') {
       return createOpenAI({
         baseURL,

@@ -1,5 +1,5 @@
 import type { ChatMessageProps } from '@nuxt/ui'
-import type { ChatState, ChatStatus, ModelMessage, UIMessage } from 'ai'
+import type { ChatState, ChatStatus, LanguageModelUsage, ModelMessage, UIMessage } from 'ai'
 import {
   APICallError,
   Output,
@@ -11,7 +11,9 @@ import {
 import type { ShallowReactive } from 'vue'
 
 import type { FormDataAi } from '@/types/formData'
+import type { TokenUsageKind } from '@/types/tokenUsage'
 import { renderTemplate } from '@/utils/ai'
+import { jsonClone } from '@/utils/deepmerge'
 
 import type { ModelConf } from '.'
 import type { WorkflowData } from '../useApplying/type'
@@ -20,6 +22,33 @@ import { openai } from './openai'
 
 const role = ['system', 'user', 'assistant', 'boss', 'jd', 'filtering', 'greetings'] as const
 type MessageRole = (typeof role)[number]
+
+const TOKEN_USAGE_KIND: Partial<Record<MessageRole, TokenUsageKind>> = {
+  filtering: 'aiFiltering',
+  greetings: 'aiGreeting',
+}
+
+function buildOneShotMessages(
+  prompt: FormDataAi['prompt'] | string,
+  data: WorkflowData<any, any>,
+): ModelMessage[] {
+  const messages: ModelMessage[] =
+    typeof prompt === 'string' ? [{ role: 'user', content: prompt }] : jsonClone(prompt)
+  for (const msg of messages) {
+    if (typeof msg.content === 'string') {
+      msg.content = renderTemplate(msg.content, data)
+    }
+  }
+  return messages
+}
+
+function usageNumber(
+  usage: LanguageModelUsage | undefined,
+  key: 'inputTokens' | 'outputTokens' | 'totalTokens',
+): number | undefined {
+  const value = usage?.[key]
+  return typeof value === 'number' ? value : undefined
+}
 
 export interface Message extends ChatMessageProps {
   uiRole: MessageRole
@@ -143,18 +172,9 @@ export class ChatModel {
     const [agent, modelConf, model] = _agent
 
     const timeout = modelConf.data?.other?.timeout ?? 60000
-    let messages: ModelMessage[]
-
-    if (typeof model.prompt === 'string') {
-      messages = [{ role: 'user', content: model.prompt }]
-    } else {
-      messages = jsonClone(model.prompt)
-    }
-    for (const msg of messages) {
-      if (typeof msg.content === 'string') {
-        msg.content = renderTemplate(msg.content, data)
-      }
-    }
+    // 故意不复用 session：每次独立请求，只发当次 prompt（system/user），
+    // 不带对话历史、不带 previous_response_id，避免 Qwen 等阶梯计费被上下文撑长。
+    const messages = buildOneShotMessages(model.prompt, data)
     let state: VueChatState<Message>
     if (!this.states.has(data.jobData.key)) {
       state = new VueChatState<Message>()
@@ -224,6 +244,7 @@ ${data.jobData.jobDescription}`,
       },
     }
     let index = -1
+    let usage: LanguageModelUsage | undefined
     const stream = await agent.stream({
       timeout,
       messages,
@@ -234,6 +255,7 @@ ${data.jobData.jobDescription}`,
         logger.debug('Chat onStepStart', m)
       },
       onStepEnd: (message) => {
+        usage = message.usage
         if (index > 0) {
           state.replaceMessage(index, {
             ...msg,
@@ -256,6 +278,7 @@ ${data.jobData.jobDescription}`,
 
     try {
       for await (const chunk of stream.toUIMessageStream({
+        // 仅用于把当前流还原成 UI 消息，不会回传给模型。
         originalMessages: state.messages,
         sendReasoning: true,
         onError: (err) => {
@@ -320,6 +343,13 @@ ${data.jobData.jobDescription}`,
       logger.error('Error during chat streaming', e)
     }
 
+    try {
+      usage = (await stream.usage) ?? usage
+    } catch (error) {
+      logger.debug('读取 LLM usage 失败', error)
+    }
+    this.recordTokenUsage(agentName, modelConf, data, usage)
+
     if (state.error) {
       throw state.error
     }
@@ -334,5 +364,35 @@ ${data.jobData.jobDescription}`,
     //   msgs.replaceMessage(index, chunk)
     // }
     return stream
+  }
+
+  private recordTokenUsage(
+    agentName: MessageRole,
+    modelConf: ModelConf,
+    data: WorkflowData<any, any>,
+    usage: LanguageModelUsage | undefined,
+  ) {
+    const kind = TOKEN_USAGE_KIND[agentName]
+    if (!kind) return
+
+    const promptTokens = usageNumber(usage, 'inputTokens')
+    const completionTokens = usageNumber(usage, 'outputTokens')
+    const totalTokens =
+      usageNumber(usage, 'totalTokens') ??
+      (promptTokens != null || completionTokens != null
+        ? (promptTokens ?? 0) + (completionTokens ?? 0)
+        : undefined)
+
+    void this.ctx.tokenUsage.record({
+      time: Date.now(),
+      kind,
+      model: modelConf.data?.model ?? modelConf.name,
+      modelName: modelConf.name,
+      promptTokens,
+      completionTokens,
+      totalTokens,
+      jobTitle: data.jobData.jobName ?? data.jobData.positionName,
+      jobKey: data.jobData.key,
+    })
   }
 }
